@@ -1,2 +1,2 @@
-# anudeepsamaiya.github.io
+# anudeepsamaiya.com
 Personal Website anudeepsamaiya.com
