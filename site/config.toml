@@ -15,7 +15,7 @@ enableRobotsTXT = true
 [[menu.main]]
     identifier = "about"
     name = "About"
-    url = "/about/"
+    url = "/anudeepsamaiya/"
     weight = 1
 
 [[menu.main]]
