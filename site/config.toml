@@ -25,17 +25,17 @@ enableRobotsTXT = true
     url = "/reading/"
     weight = 1.1
 
-[[menu.main]]
-    identifier = "tags"
-    name = "Tags"
-    url = "/tags/"
-    weight = 2
-
-[[menu.main]]
-    identifier = "archives"
-    name = "Archives"
-    url = "/archives/"
-    weight = 3
+# [[menu.main]]
+#     identifier = "tags"
+#     name = "Tags"
+#     url = "/tags/"
+#     weight = 2
+#
+# [[menu.main]]
+#     identifier = "archives"
+#     name = "Archives"
+#     url = "/archives/"
+#     weight = 3
 
 [params]
     enableEmoji = true
