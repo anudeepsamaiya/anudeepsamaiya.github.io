@@ -1,0 +1,465 @@
+<!DOCTYPE html><html lang="en-US"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description" content="The framework I use to tackle system design interviews, demonstrated through designing a URL shortener from requirements to scaling strategies."><meta name="author" content="Anudeep Samaiya"><meta name="google-site-verification" content="twVFs_dUxCyldlt-Sif72GezMsXbI0wKJEVTBJ1A22g"><link rel="canonical" href="https://anudeepsamaiya.github.io/blog/2023-05-12-system-design-interview-framework/"><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/site.webmanifest"><title>How I Approach System Design Interviews: A Framework That Actually Works | Anudeep Samaiya</title><script>
+      // Initialize theme before page renders to prevent flash
+      (function() {
+        const theme = localStorage.getItem('theme') || 'light';
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script><link rel="stylesheet" href="/_astro/about.Cg2y2hoq.css">
+<style>.prose pre{overflow-x:auto}.prose pre:has(code:contains("┌")),.prose pre:has(code:contains("│")),.prose pre:has(code:contains("▶")),.prose pre:has(code:contains("└")){text-align:center;display:flex;justify-content:center}
+</style></head> <body class="bg-white dark:bg-gray-900"> <div class="min-h-screen flex flex-col"> <header class="py-6 px-4 border-b border-gray-200 dark:border-gray-800"> <nav class="max-w-4xl mx-auto flex justify-between items-center"> <a href="/" class="text-2xl font-bold text-gray-900 dark:text-white"> Anudeep Samaiya </a> <div class="flex items-center gap-6"> <ul class="flex gap-6"> <li> <a href="/about" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"> About </a> </li><li> <a href="/blog" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"> Blog </a> </li><li> <a href="/reading" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"> Reading </a> </li> </ul> <style>astro-island,astro-slot,astro-static-slot{display:contents}</style><script>(()=>{var e=async t=>{await(await t())()};(self.Astro||(self.Astro={})).load=e;window.dispatchEvent(new Event("astro:load"));})();</script><script>(()=>{var A=Object.defineProperty;var g=(i,o,a)=>o in i?A(i,o,{enumerable:!0,configurable:!0,writable:!0,value:a}):i[o]=a;var d=(i,o,a)=>g(i,typeof o!="symbol"?o+"":o,a);{let i={0:t=>m(t),1:t=>a(t),2:t=>new RegExp(t),3:t=>new Date(t),4:t=>new Map(a(t)),5:t=>new Set(a(t)),6:t=>BigInt(t),7:t=>new URL(t),8:t=>new Uint8Array(t),9:t=>new Uint16Array(t),10:t=>new Uint32Array(t),11:t=>1/0*t},o=t=>{let[l,e]=t;return l in i?i[l](e):void 0},a=t=>t.map(o),m=t=>typeof t!="object"||t===null?t:Object.fromEntries(Object.entries(t).map(([l,e])=>[l,o(e)]));class y extends HTMLElement{constructor(){super(...arguments);d(this,"Component");d(this,"hydrator");d(this,"hydrate",async()=>{var b;if(!this.hydrator||!this.isConnected)return;let e=(b=this.parentElement)==null?void 0:b.closest("astro-island[ssr]");if(e){e.addEventListener("astro:hydrate",this.hydrate,{once:!0});return}let c=this.querySelectorAll("astro-slot"),n={},h=this.querySelectorAll("template[data-astro-template]");for(let r of h){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("data-astro-template")||"default"]=r.innerHTML,r.remove())}for(let r of c){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("name")||"default"]=r.innerHTML)}let p;try{p=this.hasAttribute("props")?m(JSON.parse(this.getAttribute("props"))):{}}catch(r){let s=this.getAttribute("component-url")||"<unknown>",v=this.getAttribute("component-export");throw v&&(s+=` (export ${v})`),console.error(`[hydrate] Error parsing props for component ${s}`,this.getAttribute("props"),r),r}let u;await this.hydrator(this)(this.Component,p,n,{client:this.getAttribute("client")}),this.removeAttribute("ssr"),this.dispatchEvent(new CustomEvent("astro:hydrate"))});d(this,"unmount",()=>{this.isConnected||this.dispatchEvent(new CustomEvent("astro:unmount"))})}disconnectedCallback(){document.removeEventListener("astro:after-swap",this.unmount),document.addEventListener("astro:after-swap",this.unmount,{once:!0})}connectedCallback(){if(!this.hasAttribute("await-children")||document.readyState==="interactive"||document.readyState==="complete")this.childrenConnectedCallback();else{let e=()=>{document.removeEventListener("DOMContentLoaded",e),c.disconnect(),this.childrenConnectedCallback()},c=new MutationObserver(()=>{var n;((n=this.lastChild)==null?void 0:n.nodeType)===Node.COMMENT_NODE&&this.lastChild.nodeValue==="astro:end"&&(this.lastChild.remove(),e())});c.observe(this,{childList:!0}),document.addEventListener("DOMContentLoaded",e)}}async childrenConnectedCallback(){let e=this.getAttribute("before-hydration-url");e&&await import(e),this.start()}async start(){let e=JSON.parse(this.getAttribute("opts")),c=this.getAttribute("client");if(Astro[c]===void 0){window.addEventListener(`astro:${c}`,()=>this.start(),{once:!0});return}try{await Astro[c](async()=>{let n=this.getAttribute("renderer-url"),[h,{default:p}]=await Promise.all([import(this.getAttribute("component-url")),n?import(n):()=>()=>{}]),u=this.getAttribute("component-export")||"default";if(!u.includes("."))this.Component=h[u];else{this.Component=h;for(let f of u.split("."))this.Component=this.Component[f]}return this.hydrator=p,this.hydrate},e,this)}catch(n){console.error(`[astro-island] Error hydrating ${this.getAttribute("component-url")}`,n)}}attributeChangedCallback(){this.hydrate()}}d(y,"observedAttributes",["props"]),customElements.get("astro-island")||customElements.define("astro-island",y)}})();</script><astro-island uid="Z1WQ4OE" prefix="r0" component-url="/_astro/ThemeToggle.C_FMJT46.js" component-export="default" renderer-url="/_astro/client.AE0akZX9.js" props="{}" ssr client="load" opts="{&quot;name&quot;:&quot;ThemeToggle&quot;,&quot;value&quot;:true}" await-children><div class="w-9 h-9 p-2 rounded-lg bg-gray-100 dark:bg-gray-800"><div class="w-5 h-5"></div></div><!--astro:end--></astro-island> </div> </nav> </header> <main class="flex-1">  <article class="max-w-4xl mx-auto px-4 py-12"> <header class="mb-8"> <h1 class="text-4xl font-bold mb-4 text-gray-900 dark:text-white"> How I Approach System Design Interviews: A Framework That Actually Works </h1> <div class="flex items-center gap-4 text-gray-600 dark:text-gray-400"> <time> May 12, 2023 </time> </div> </header> <div class="prose prose-lg dark:prose-invert max-w-none mb-12"> <p>System design interviews are challenging. Unlike coding interviews where you write actual code, you’re expected to architect entire systems while explaining your thinking out loud. The questions are deliberately open-ended, which makes it hard to know where to start.</p>
+<p>When I reason through system design problems, having a framework helps. I’ll demonstrate it by designing a URL shortener (like bit.ly), walking through each step with concrete examples you can apply to any system design problem.</p>
+<h2 id="why-url-shortener-as-an-example">Why URL Shortener as an Example?</h2>
+<p>URL shorteners look deceptively simple. Everyone has used short links, but building one involves interesting technical challenges around distributed systems, caching, and database design. Interviewers frequently use this problem because it covers core concepts without being overwhelming.</p>
+<h2 id="the-framework-rude-cat">The Framework: RUDE-CAT</h2>
+<p>The name is easy to remember. Here’s what it stands for:</p>
+<ol>
+<li><strong>R</strong>equirements (What are we building?)</li>
+<li><strong>U</strong>sage Estimates (Expected traffic and scale)</li>
+<li><strong>D</strong>ata Model &#x26; API Design (Interface design)</li>
+<li><strong>E</strong>ntity Relationships &#x26; Storage (Data storage strategy)</li>
+<li><strong>C</strong>omponent Design (System architecture)</li>
+<li><strong>A</strong>dvanced Topics (Performance and reliability)</li>
+<li><strong>T</strong>rade-offs &#x26; Bottlenecks (What can fail)</li>
+</ol>
+<hr>
+<h2 id="step-1-requirements-15-of-interview-time">Step 1: Requirements (~15% of interview time)</h2>
+<p>Never jump straight into designing. Always start by clarifying requirements because it prevents you from solving the wrong problem.</p>
+<h3 id="functional-requirements">Functional Requirements</h3>
+<p>For a URL shortener, clarify these features:</p>
+<ol>
+<li>URL shortening: users provide a long URL and receive a short code</li>
+<li>Redirect: short URLs redirect to the original long URL</li>
+<li>Custom aliases: can users choose their own short codes?</li>
+<li>Analytics: do we track click counts, locations, referrers?</li>
+<li>Expiration: should links have a TTL?</li>
+</ol>
+<p>Start with core features (1-2), then discuss optional ones based on remaining time.</p>
+<h3 id="non-functional-requirements">Non-Functional Requirements</h3>
+<p>For a URL shortener, prioritize:</p>
+<ul>
+<li><strong>High availability</strong> (99.9% uptime) because dead links damage user trust</li>
+<li><strong>Low latency</strong> (under 100ms for redirects) because users expect instant redirects</li>
+<li><strong>Scalability</strong> because the system must handle millions of URLs and billions of clicks</li>
+<li><strong>Durability</strong> because links shouldn’t disappear once created</li>
+</ul>
+<p>For this system, availability and speed matter more than perfect consistency. Analytics can tolerate slight delays, but slow or failed redirects are unacceptable.</p>
+<hr>
+<h2 id="step-2-usage-estimates-10-of-interview-time">Step 2: Usage Estimates (~10% of interview time)</h2>
+<p>Time for capacity planning. Rough estimates are fine. Interviewers care about your approach, not precise arithmetic.</p>
+<h3 id="scale-assumptions">Scale Assumptions</h3>
+<p>Starting assumptions:</p>
+<ul>
+<li>100 million new URLs created per month</li>
+<li>100:1 read-to-write ratio (way more redirects than new URLs)</li>
+<li>URLs are stored forever (we can discuss deletion later)</li>
+</ul>
+<p><strong>Quick calculations:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>New URLs (writes):</span></span>
+<span class="line"><span>- 100M URLs/month</span></span>
+<span class="line"><span>- That's roughly 40 URLs/second</span></span>
+<span class="line"><span>- At peak: maybe 120 URLs/second (assuming 3x traffic spike)</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Redirects (reads):</span></span>
+<span class="line"><span>- 100:1 ratio means 10 billion redirects/month</span></span>
+<span class="line"><span>- That's about 4,000 redirects/second</span></span>
+<span class="line"><span>- Peak: around 12,000 redirects/second</span></span></code></pre>
+<h3 id="how-much-storage-do-we-need">How Much Storage Do We Need?</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Each URL entry needs:</span></span>
+<span class="line"><span>- Short code: 7 bytes</span></span>
+<span class="line"><span>- Original URL: ~500 bytes (being generous)</span></span>
+<span class="line"><span>- Metadata: ~100 bytes (timestamps, user info, etc.)</span></span>
+<span class="line"><span>- Total: roughly 600 bytes per URL</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Storage over time:</span></span>
+<span class="line"><span>- Year 1: 100M × 12 months × 600 bytes = 720 GB</span></span>
+<span class="line"><span>- Year 5: about 3.6 TB</span></span>
+<span class="line"><span>- With 3x replication: ~11 TB total</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Cache size (80/20 rule):</span></span>
+<span class="line"><span>- Cache top 20%: ~200 GB per year</span></span></code></pre>
+<p>Round liberally and use powers of 10. The goal is demonstrating that you think about scale systematically.</p>
+<hr>
+<h2 id="step-3-data-model--api-design-15-of-interview-time">Step 3: Data Model &#x26; API Design (~15% of interview time)</h2>
+<p>Keep the API design simple and RESTful.</p>
+<h3 id="api-design">API Design</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>1. Create Short URL</span></span>
+<span class="line"><span>POST /api/v1/urls</span></span>
+<span class="line"><span>{</span></span>
+<span class="line"><span>  "long_url": "https://example.com/very/long/path",</span></span>
+<span class="line"><span>  "custom_alias": "my-link",  // optional</span></span>
+<span class="line"><span>  "expiry_date": "2026-12-31" // optional</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Response:</span></span>
+<span class="line"><span>{</span></span>
+<span class="line"><span>  "short_url": "https://short.ly/abc123",</span></span>
+<span class="line"><span>  "long_url": "https://example.com/very/long/path",</span></span>
+<span class="line"><span>  "created_at": "2026-01-06T10:00:00Z"</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>2. Redirect</span></span>
+<span class="line"><span>GET /:shortCode</span></span>
+<span class="line"><span>→ Returns 302 redirect to long URL</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>3. Analytics</span></span>
+<span class="line"><span>GET /api/v1/urls/:shortCode/stats</span></span>
+<span class="line"><span>{</span></span>
+<span class="line"><span>  "short_url": "https://short.ly/abc123",</span></span>
+<span class="line"><span>  "total_clicks": 1523,</span></span>
+<span class="line"><span>  "clicks_by_date": [...],</span></span>
+<span class="line"><span>  "top_locations": [...]</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>4. Delete URL</span></span>
+<span class="line"><span>DELETE /api/v1/urls/:shortCode</span></span></code></pre>
+<h3 id="database-schema">Database Schema</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="sql"><code><span class="line"><span style="color:#6A737D">-- URL mappings</span></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> TABLE</span><span style="color:#B392F0"> urls</span><span style="color:#E1E4E8"> (</span></span>
+<span class="line"><span style="color:#E1E4E8">  id </span><span style="color:#F97583">BIGSERIAL</span><span style="color:#F97583"> PRIMARY KEY</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">  short_code </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">10</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">UNIQUE</span><span style="color:#F97583"> NOT NULL</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">  long_url </span><span style="color:#F97583">TEXT</span><span style="color:#F97583"> NOT NULL</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">  user_id </span><span style="color:#F97583">BIGINT</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">  created_at </span><span style="color:#F97583">TIMESTAMP</span><span style="color:#F97583"> DEFAULT</span><span style="color:#F97583"> NOW</span><span style="color:#E1E4E8">(),</span></span>
+<span class="line"><span style="color:#E1E4E8">  expires_at </span><span style="color:#F97583">TIMESTAMP</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">  is_active </span><span style="color:#F97583">BOOLEAN</span><span style="color:#F97583"> DEFAULT</span><span style="color:#E1E4E8"> TRUE,</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">  INDEX</span><span style="color:#E1E4E8"> idx_short_code (short_code),</span></span>
+<span class="line"><span style="color:#F97583">  INDEX</span><span style="color:#E1E4E8"> idx_user_id (user_id)</span></span>
+<span class="line"><span style="color:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">-- Analytics tracking</span></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> TABLE</span><span style="color:#B392F0"> clicks</span><span style="color:#E1E4E8"> (</span></span>
+<span class="line"><span style="color:#E1E4E8">  id </span><span style="color:#F97583">BIGSERIAL</span><span style="color:#F97583"> PRIMARY KEY</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">  short_code </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">10</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">NOT NULL</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">  clicked_at </span><span style="color:#F97583">TIMESTAMP</span><span style="color:#F97583"> DEFAULT</span><span style="color:#F97583"> NOW</span><span style="color:#E1E4E8">(),</span></span>
+<span class="line"><span style="color:#E1E4E8">  ip_address </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">45</span><span style="color:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#E1E4E8">  user_agent </span><span style="color:#F97583">TEXT</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">  referrer </span><span style="color:#F97583">TEXT</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">  country </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">2</span><span style="color:#E1E4E8">),</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">  INDEX</span><span style="color:#E1E4E8"> idx_short_code (short_code),</span></span>
+<span class="line"><span style="color:#F97583">  INDEX</span><span style="color:#E1E4E8"> idx_clicked_at (clicked_at)</span></span>
+<span class="line"><span style="color:#E1E4E8">);</span></span></code></pre>
+<p>Design rationale:</p>
+<ul>
+<li><code>short_code</code> VARCHAR(10) provides 62^10 possible combinations</li>
+<li>Separate <code>clicks</code> table prevents analytics writes from blocking redirects</li>
+<li>Index on <code>short_code</code> enables fast lookups</li>
+</ul>
+<hr>
+<h2 id="step-4-database-selection-10-of-interview-time">Step 4: Database Selection (~10% of interview time)</h2>
+<h3 id="choosing-the-database">Choosing the Database</h3>
+<p><strong>Start with PostgreSQL:</strong></p>
+<ul>
+<li>ACID guarantees prevent data loss</li>
+<li>Excellent indexing for fast lookups</li>
+<li>Supports joins for analytics queries</li>
+<li>Proven reliability at scale</li>
+</ul>
+<p><strong>Consider NoSQL at 10K+ writes/second:</strong></p>
+<ul>
+<li>Cassandra or DynamoDB</li>
+<li>Better horizontal scaling</li>
+<li>Eventually consistent model works for this use case</li>
+<li>Optimized for key-value lookups</li>
+</ul>
+<p>Start simple with Postgres. Migration to NoSQL is straightforward if needed later.</p>
+<h3 id="sharding-strategy">Sharding Strategy</h3>
+<p>When a single database reaches capacity:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Option 1: Hash-based sharding</span></span>
+<span class="line"><span>- shard_id = hash(short_code) % num_shards</span></span>
+<span class="line"><span>- ✅ Even distribution</span></span>
+<span class="line"><span>- ❌ Resharding is complex</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Option 2: Range-based sharding</span></span>
+<span class="line"><span>- Shard by creation date</span></span>
+<span class="line"><span>- ✅ Easy to add shards</span></span>
+<span class="line"><span>- ❌ Write hotspots on newest shard</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Option 3: Geographic sharding</span></span>
+<span class="line"><span>- Shard by user location</span></span>
+<span class="line"><span>- ✅ Data locality</span></span>
+<span class="line"><span>- ❌ Uneven distribution</span></span></code></pre>
+<p>Hash-based sharding on <code>short_code</code> provides the most even distribution.</p>
+<hr>
+<h2 id="step-5-component-design-30-of-interview-time">Step 5: Component Design (~30% of interview time)</h2>
+<p>This is where you design the architecture and explain how components interact.</p>
+<h3 id="high-level-architecture">High-Level Architecture</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>                    Users</span></span>
+<span class="line"><span>                      |</span></span>
+<span class="line"><span>                      ↓</span></span>
+<span class="line"><span>            ┌─────────────────┐</span></span>
+<span class="line"><span>            │  Load Balancer  │</span></span>
+<span class="line"><span>            │  (CloudFlare)   │</span></span>
+<span class="line"><span>            └────────┬────────┘</span></span>
+<span class="line"><span>                     |</span></span>
+<span class="line"><span>        ┌────────────┼────────────┐</span></span>
+<span class="line"><span>        ↓            ↓            ↓</span></span>
+<span class="line"><span>    ┌────────┐  ┌────────┐  ┌────────┐</span></span>
+<span class="line"><span>    │  Web   │  │  Web   │  │  Web   │</span></span>
+<span class="line"><span>    │ Server │  │ Server │  │ Server │</span></span>
+<span class="line"><span>    └───┬────┘  └───┬────┘  └───┬────┘</span></span>
+<span class="line"><span>        └───────────┼───────────┘</span></span>
+<span class="line"><span>                    ↓</span></span>
+<span class="line"><span>            ┌───────────────┐</span></span>
+<span class="line"><span>            │  App Servers  │</span></span>
+<span class="line"><span>            │  (API Layer)  │</span></span>
+<span class="line"><span>            └───────┬───────┘</span></span>
+<span class="line"><span>                    |</span></span>
+<span class="line"><span>        ┌───────────┼───────────┐</span></span>
+<span class="line"><span>        ↓           ↓           ↓</span></span>
+<span class="line"><span>    ┌────────┐  ┌─────────┐  ┌──────────┐</span></span>
+<span class="line"><span>    │ Redis  │  │Postgres │  │ Analytics│</span></span>
+<span class="line"><span>    │ Cache  │  │   DB    │  │  Queue   │</span></span>
+<span class="line"><span>    └────────┘  └─────────┘  └──────────┘</span></span></code></pre>
+<h3 id="component-responsibilities">Component Responsibilities</h3>
+<p><strong>Load Balancer:</strong></p>
+<ul>
+<li>Distributes traffic across web servers</li>
+<li>Health checking</li>
+<li>SSL termination</li>
+<li>DDoS protection</li>
+</ul>
+<p><strong>Web Servers (stateless):</strong></p>
+<ul>
+<li>Handle HTTP requests</li>
+<li>Route to API endpoints</li>
+<li>Serve static content</li>
+</ul>
+<p><strong>App Servers:</strong></p>
+<ul>
+<li>Generate short codes</li>
+<li>Validate URLs</li>
+<li>Database operations</li>
+<li>Business logic</li>
+</ul>
+<p><strong>Redis Cache:</strong></p>
+<ul>
+<li>Cache frequently accessed URLs</li>
+<li>24-hour TTL</li>
+<li>Reduces database load by 80%+</li>
+</ul>
+<p><strong>PostgreSQL:</strong></p>
+<ul>
+<li>Persistent storage</li>
+<li>Master handles writes</li>
+<li>Read replicas for queries</li>
+</ul>
+<p><strong>Analytics Queue:</strong></p>
+<ul>
+<li>Asynchronous click processing</li>
+<li>Batch writes to analytics database</li>
+<li>Prevents blocking redirects</li>
+</ul>
+<hr>
+<h2 id="step-6-advanced-topics-15-of-interview-time">Step 6: Advanced Topics (~15% of interview time)</h2>
+<p>Deep dive into critical implementation details.</p>
+<h3 id="short-code-generation">Short Code Generation</h3>
+<p>Three approaches to consider:</p>
+<p><strong>Approach 1: Hashing</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> generate_short_code</span><span style="color:#E1E4E8">(long_url):</span></span>
+<span class="line"><span style="color:#6A737D">    # Hash the URL</span></span>
+<span class="line"><span style="color:#E1E4E8">    hash_value </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> md5(long_url).hexdigest()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Take first 7 characters, convert to base62</span></span>
+<span class="line"><span style="color:#E1E4E8">    short_code </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> base62_encode(hash_value[:</span><span style="color:#79B8FF">7</span><span style="color:#E1E4E8">])</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Handle collisions if needed</span></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#E1E4E8"> exists_in_db(short_code):</span></span>
+<span class="line"><span style="color:#E1E4E8">        short_code </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> handle_collision(short_code)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> short_code</span></span></code></pre>
+<p>✅ Same URL always gets same short code
+❌ Requires collision handling</p>
+<p><strong>Approach 2: Counter-based</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> generate_short_code</span><span style="color:#E1E4E8">():</span></span>
+<span class="line"><span style="color:#6A737D">    # Get next counter from distributed service</span></span>
+<span class="line"><span style="color:#E1E4E8">    counter </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> get_next_counter()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Convert to base62</span></span>
+<span class="line"><span style="color:#E1E4E8">    short_code </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> base62_encode(counter)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> short_code</span></span></code></pre>
+<p>✅ No collisions
+❌ Predictable sequence</p>
+<p><strong>Approach 3: Random</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> generate_short_code</span><span style="color:#E1E4E8">():</span></span>
+<span class="line"><span style="color:#F97583">    while</span><span style="color:#79B8FF"> True</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        short_code </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> random_base62(</span><span style="color:#79B8FF">7</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#F97583"> not</span><span style="color:#E1E4E8"> exists_in_db(short_code):</span></span>
+<span class="line"><span style="color:#F97583">            return</span><span style="color:#E1E4E8"> short_code</span></span></code></pre>
+<p>✅ Unpredictable and simple
+❌ Multiple database checks possible</p>
+<p>Counter-based generation with ZooKeeper or Redis for distributed counter management provides the best balance.</p>
+<h3 id="caching-strategy">Caching Strategy</h3>
+<p>Implementation:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>When a redirect request comes in:</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>1. Check Redis first (key: short_code, value: long_url)</span></span>
+<span class="line"><span>2. Cache HIT?</span></span>
+<span class="line"><span>   - Return the URL immediately</span></span>
+<span class="line"><span>   - Log analytics asynchronously</span></span>
+<span class="line"><span>3. Cache MISS?</span></span>
+<span class="line"><span>   - Query the database</span></span>
+<span class="line"><span>   - Store in Redis with 24-hour TTL</span></span>
+<span class="line"><span>   - Return the URL</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Eviction: LRU (kick out least recently used)</span></span>
+<span class="line"><span>Size: ~200 GB (stores about 300M URLs)</span></span>
+<span class="line"><span>Expected hit rate: ~85%</span></span></code></pre>
+<p>This reduces database load significantly. Most requests never touch the database.</p>
+<h3 id="analytics-processing">Analytics Processing</h3>
+<p>Asynchronous analytics to avoid blocking redirects:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Flow:</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>1. User visits short URL</span></span>
+<span class="line"><span>2. Immediately redirect</span></span>
+<span class="line"><span>3. Fire event to message queue (Kafka/RabbitMQ)</span></span>
+<span class="line"><span>4. Worker processes batch events</span></span>
+<span class="line"><span>5. Batch insert to analytics DB</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Benefits:</span></span>
+<span class="line"><span>- Redirect latency: &#x3C;50ms</span></span>
+<span class="line"><span>- Event aggregation before writes</span></span>
+<span class="line"><span>- Replay capability if analytics DB fails</span></span></code></pre>
+<h3 id="rate-limiting">Rate Limiting</h3>
+<p>Using Redis with token bucket algorithm:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>if redis.get(ip + ':minute') > 100:</span></span>
+<span class="line"><span>    return 429 Too Many Requests</span></span>
+<span class="line"><span>else:</span></span>
+<span class="line"><span>    redis.incr(ip + ':minute')</span></span>
+<span class="line"><span>    redis.expire(ip + ':minute', 60)</span></span></code></pre>
+<hr>
+<h2 id="step-7-trade-offs--bottlenecks-5-of-interview-time">Step 7: Trade-offs &#x26; Bottlenecks (~5% of interview time)</h2>
+<p>Discuss potential failure modes and design trade-offs.</p>
+<h3 id="potential-bottlenecks">Potential Bottlenecks</h3>
+<ol>
+<li>
+<p><strong>Database writes at massive scale</strong>
+→ Shard database or migrate to NoSQL</p>
+</li>
+<li>
+<p><strong>Counter service single point of failure</strong>
+→ Pre-allocate counter ranges to each server</p>
+</li>
+<li>
+<p><strong>Hot URLs overwhelming cache</strong>
+→ Add CDN layer with multiple cache replicas</p>
+</li>
+<li>
+<p><strong>High latency for global users</strong>
+→ Multi-region deployment with geo-routing</p>
+</li>
+</ol>
+<h3 id="design-trade-offs">Design Trade-offs</h3>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Decision</th><th>Trade-off</th></tr></thead><tbody><tr><td>Eventually consistent analytics</td><td>Fast redirects vs. real-time accuracy</td></tr><tr><td>7-character short codes</td><td>3.5 trillion URLs vs. shorter codes</td></tr><tr><td>PostgreSQL over NoSQL</td><td>Simplicity vs. extreme write throughput</td></tr><tr><td>Cache-aside pattern</td><td>Some cache misses vs. complexity</td></tr></tbody></table>
+<hr>
+<h2 id="common-mistakes-to-avoid">Common Mistakes to Avoid</h2>
+<ol>
+<li><strong>Jumping to solutions</strong> without clarifying requirements</li>
+<li><strong>Over-engineering</strong> for unnecessary scale</li>
+<li><strong>Ignoring failure modes</strong> and recovery strategies</li>
+<li><strong>Skipping capacity estimates</strong></li>
+<li><strong>Not explaining trade-offs</strong> behind decisions</li>
+<li><strong>Drawing boxes</strong> without explaining their purpose</li>
+</ol>
+<hr>
+<h2 id="time-management">Time Management</h2>
+<p>For a 45-minute interview:</p>
+<ul>
+<li><strong>0-7 min:</strong> Requirements &#x26; clarifications</li>
+<li><strong>7-12 min:</strong> Capacity estimates</li>
+<li><strong>12-20 min:</strong> API design &#x26; data model</li>
+<li><strong>20-35 min:</strong> Architecture &#x26; components</li>
+<li><strong>35-40 min:</strong> Deep dive (caching, encoding, scaling)</li>
+<li><strong>40-45 min:</strong> Trade-offs &#x26; Q&#x26;A</li>
+</ul>
+<p>Reserve time for interviewer questions at the end.</p>
+<hr>
+<h2 id="applying-rude-cat-to-other-problems">Applying RUDE-CAT to Other Problems</h2>
+<p>The framework adapts to any system design problem:</p>
+<ul>
+<li><strong>Instagram:</strong> Image storage, feed generation, content delivery</li>
+<li><strong>Netflix:</strong> Video encoding, CDN strategy, recommendation systems</li>
+<li><strong>Uber:</strong> Geo-spatial indexing, driver matching, real-time updates</li>
+<li><strong>WhatsApp:</strong> WebSocket connections, message queues, end-to-end encryption</li>
+</ul>
+<p>The steps remain constant. Only the implementation details change.</p>
+<hr>
+<h2 id="final-thoughts">Final Thoughts</h2>
+<p>System design interviews don’t have perfect answers. Interviewers evaluate your thinking process, how you handle trade-offs, and your ability to communicate complex technical concepts clearly.</p>
+<p>This framework provides structure when the problem feels overwhelming. It keeps you organized under pressure.</p>
+<p>Practice this framework on various problems. Draw diagrams. Explain your reasoning out loud. Time yourself. With repetition, the process becomes natural.</p>
+<p>Reach out on <a href="https://twitter.com/anudeepsamaiya">Twitter</a> or <a href="https://www.linkedin.com/in/anudeepsamaiya/">LinkedIn</a> if you want to discuss system design or interview preparation.</p>
+<hr>
+<h2 id="resources">Resources</h2>
+<p><strong>Books:</strong></p>
+<ul>
+<li>“Designing Data-Intensive Applications” by Martin Kleppmann</li>
+<li>“System Design Interview” by Alex Xu</li>
+</ul>
+<p><strong>Online Resources:</strong></p>
+<ul>
+<li><a href="https://github.com/donnemartin/system-design-primer">System Design Primer on GitHub</a></li>
+<li><a href="https://www.educative.io/courses/grokking-the-system-design-interview">Grokking the System Design Interview</a></li>
+</ul>
+<p><strong>Practice Platforms:</strong></p>
+<ul>
+<li><a href="https://leetcode.com/discuss/interview-question/system-design">LeetCode System Design</a></li>
+<li><a href="https://www.pramp.com/">Pramp</a> for mock interviews with peers</li>
+</ul> </div> <!-- Social Share Buttons --> <div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-800"> <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Share this post:</p> <div class="flex gap-3"> <a href="https://twitter.com/intent/tweet?text=How%20I%20Approach%20System%20Design%20Interviews%3A%20A%20Framework%20That%20Actually%20Works&url=https%3A%2F%2Fanudeepsamaiya.github.io%2Fblog%2F2023-05-12-system-design-interview-framework%2F" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors" aria-label="Share on Twitter"> <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"> <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path> </svg>
+Twitter
+</a> <a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fanudeepsamaiya.github.io%2Fblog%2F2023-05-12-system-design-interview-framework%2F" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg transition-colors" aria-label="Share on LinkedIn"> <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"> <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"></path> </svg>
+LinkedIn
+</a> <a href="https://news.ycombinator.com/submitlink?u=https%3A%2F%2Fanudeepsamaiya.github.io%2Fblog%2F2023-05-12-system-design-interview-framework%2F&t=How%20I%20Approach%20System%20Design%20Interviews%3A%20A%20Framework%20That%20Actually%20Works" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors" aria-label="Share on Hacker News"> <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"> <path d="M0 24V0h24v24H0zM6.951 5.896l4.112 7.708v5.064h1.583v-4.972l4.148-7.799h-1.749l-2.457 4.875c-.372.745-.688 1.434-.688 1.434s-.297-.708-.651-1.434L8.831 5.896h-1.88z"></path> </svg>
+HN
+</a> </div> </div> <!-- Tags at bottom --> <div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-800"> <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Tags:</p> <div class="flex flex-wrap gap-2"> <span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#system-design </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#interviews </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#architecture </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#scaling </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#backend </span> </div> </div> <section class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800"><h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+Related Posts
+</h2><div class="space-y-4"><a href="/blog/2025-03-05-url-shortener-system-design-part1-hld" class="block p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">URL Shortener System Design (Part 1): High-Level Architecture</h3><p class="text-gray-600 dark:text-gray-400 text-sm mb-2">Master the fundamentals of designing a production URL shortener: requirements, capacity planning, distributed ID generation, database design, and caching strategies for system design interviews.</p><div class="flex gap-2 flex-wrap"><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">system-design</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">backend</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">architecture</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">interviews</span></div></a><a href="/blog/2024-06-23-building-a-url-shortener" class="block p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Building a URL Shortener That Scales</h3><p class="text-gray-600 dark:text-gray-400 text-sm mb-2">Designing and implementing a production-ready URL shortener with custom domains, analytics, and high availability.</p><div class="flex gap-2 flex-wrap"><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">system-design</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">backend</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">architecture</span></div></a><a href="/blog/2024-01-18-designing-a-rate-limiter" class="block p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Designing a Distributed Rate Limiter</h3><p class="text-gray-600 dark:text-gray-400 text-sm mb-2">Building a production-ready rate limiter that scales across multiple servers using Redis and token bucket algorithm.</p><div class="flex gap-2 flex-wrap"><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">system-design</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">backend</span></div></a></div></section> <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800"> <a href="/blog" class="text-blue-600 dark:text-blue-400 hover:underline">
+← Back to all posts
+</a> </div> </article> <div class="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 py-8 mt-12"> <div class="max-w-4xl mx-auto px-4"> <div class="text-center mb-6"> <h2 class="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Let's Connect! 💬</h2> <p class="text-base text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
+Whether you're looking to hire, want to collaborate on a project, or just want to chat about tech—I'd love to hear from you!
+</p> </div> <div class="flex flex-col sm:flex-row items-center justify-center gap-6"> <astro-island uid="ZC9c4W" prefix="r1" component-url="/_astro/ContactForm.DeBm0i4w.js" component-export="default" renderer-url="/_astro/client.AE0akZX9.js" props="{}" ssr client="load" opts="{&quot;name&quot;:&quot;ContactForm&quot;,&quot;value&quot;:true}"></astro-island> <div class="flex items-center gap-4"> <div class="h-8 w-px bg-gray-300 dark:bg-gray-700 hidden sm:block"></div> <p class="text-gray-600 dark:text-gray-400 text-sm hidden sm:block">or find me on</p> </div> <div class="flex gap-4"> <a href="https://github.com/anudeepsamaiya" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="GitHub"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/github.svg" alt="GitHub" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://twitter.com/anudeepsamaiya" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="X (Twitter)"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/x.svg" alt="X (Twitter)" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://www.linkedin.com/in/anudeepsamaiya/" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="LinkedIn"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/linkedin.svg" alt="LinkedIn" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://stackoverflow.com/users/2079692/anudeep-samaiya" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="Stack Overflow"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/stackoverflow.svg" alt="Stack Overflow" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://leetcode.com/anudeepsamaiya/" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="LeetCode"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/leetcode.svg" alt="LeetCode" class="w-6 h-6 opacity-60 dark:invert"> </a> </div> </div> </div> </div>  </main> <footer class="py-6 px-4 border-t border-gray-200 dark:border-gray-800"> <div class="max-w-4xl mx-auto text-center text-gray-600 dark:text-gray-400 text-sm"> <p class="mb-2"> © 2018-2026 Anudeep Samaiya. All rights reserved. </p> <p>
+Code:
+<a href="https://github.com/anudeepsamaiya/anudeepsamaiya.github.io/blob/master/LICENSE" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline mx-1">
+MIT License
+</a>
+| Content:
+<a href="https://github.com/anudeepsamaiya/anudeepsamaiya.github.io/blob/master/LICENSE-CONTENT" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline mx-1">
+CC BY 4.0
+</a> </p> </div> </footer> </div> </body></html> 
