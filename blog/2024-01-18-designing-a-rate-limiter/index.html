@@ -1,0 +1,417 @@
+<!DOCTYPE html><html lang="en-US"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description" content="Building a production-ready rate limiter that scales across multiple servers using Redis and token bucket algorithm."><meta name="author" content="Anudeep Samaiya"><meta name="google-site-verification" content="twVFs_dUxCyldlt-Sif72GezMsXbI0wKJEVTBJ1A22g"><link rel="canonical" href="https://anudeepsamaiya.github.io/blog/2024-01-18-designing-a-rate-limiter/"><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/site.webmanifest"><title>Designing a Distributed Rate Limiter | Anudeep Samaiya</title><script>
+      // Initialize theme before page renders to prevent flash
+      (function() {
+        const theme = localStorage.getItem('theme') || 'light';
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script><link rel="stylesheet" href="/_astro/about.Cg2y2hoq.css">
+<style>.prose pre{overflow-x:auto}.prose pre:has(code:contains("┌")),.prose pre:has(code:contains("│")),.prose pre:has(code:contains("▶")),.prose pre:has(code:contains("└")){text-align:center;display:flex;justify-content:center}
+</style></head> <body class="bg-white dark:bg-gray-900"> <div class="min-h-screen flex flex-col"> <header class="py-6 px-4 border-b border-gray-200 dark:border-gray-800"> <nav class="max-w-4xl mx-auto flex justify-between items-center"> <a href="/" class="text-2xl font-bold text-gray-900 dark:text-white"> Anudeep Samaiya </a> <div class="flex items-center gap-6"> <ul class="flex gap-6"> <li> <a href="/about" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"> About </a> </li><li> <a href="/blog" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"> Blog </a> </li><li> <a href="/reading" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"> Reading </a> </li> </ul> <style>astro-island,astro-slot,astro-static-slot{display:contents}</style><script>(()=>{var e=async t=>{await(await t())()};(self.Astro||(self.Astro={})).load=e;window.dispatchEvent(new Event("astro:load"));})();</script><script>(()=>{var A=Object.defineProperty;var g=(i,o,a)=>o in i?A(i,o,{enumerable:!0,configurable:!0,writable:!0,value:a}):i[o]=a;var d=(i,o,a)=>g(i,typeof o!="symbol"?o+"":o,a);{let i={0:t=>m(t),1:t=>a(t),2:t=>new RegExp(t),3:t=>new Date(t),4:t=>new Map(a(t)),5:t=>new Set(a(t)),6:t=>BigInt(t),7:t=>new URL(t),8:t=>new Uint8Array(t),9:t=>new Uint16Array(t),10:t=>new Uint32Array(t),11:t=>1/0*t},o=t=>{let[l,e]=t;return l in i?i[l](e):void 0},a=t=>t.map(o),m=t=>typeof t!="object"||t===null?t:Object.fromEntries(Object.entries(t).map(([l,e])=>[l,o(e)]));class y extends HTMLElement{constructor(){super(...arguments);d(this,"Component");d(this,"hydrator");d(this,"hydrate",async()=>{var b;if(!this.hydrator||!this.isConnected)return;let e=(b=this.parentElement)==null?void 0:b.closest("astro-island[ssr]");if(e){e.addEventListener("astro:hydrate",this.hydrate,{once:!0});return}let c=this.querySelectorAll("astro-slot"),n={},h=this.querySelectorAll("template[data-astro-template]");for(let r of h){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("data-astro-template")||"default"]=r.innerHTML,r.remove())}for(let r of c){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("name")||"default"]=r.innerHTML)}let p;try{p=this.hasAttribute("props")?m(JSON.parse(this.getAttribute("props"))):{}}catch(r){let s=this.getAttribute("component-url")||"<unknown>",v=this.getAttribute("component-export");throw v&&(s+=` (export ${v})`),console.error(`[hydrate] Error parsing props for component ${s}`,this.getAttribute("props"),r),r}let u;await this.hydrator(this)(this.Component,p,n,{client:this.getAttribute("client")}),this.removeAttribute("ssr"),this.dispatchEvent(new CustomEvent("astro:hydrate"))});d(this,"unmount",()=>{this.isConnected||this.dispatchEvent(new CustomEvent("astro:unmount"))})}disconnectedCallback(){document.removeEventListener("astro:after-swap",this.unmount),document.addEventListener("astro:after-swap",this.unmount,{once:!0})}connectedCallback(){if(!this.hasAttribute("await-children")||document.readyState==="interactive"||document.readyState==="complete")this.childrenConnectedCallback();else{let e=()=>{document.removeEventListener("DOMContentLoaded",e),c.disconnect(),this.childrenConnectedCallback()},c=new MutationObserver(()=>{var n;((n=this.lastChild)==null?void 0:n.nodeType)===Node.COMMENT_NODE&&this.lastChild.nodeValue==="astro:end"&&(this.lastChild.remove(),e())});c.observe(this,{childList:!0}),document.addEventListener("DOMContentLoaded",e)}}async childrenConnectedCallback(){let e=this.getAttribute("before-hydration-url");e&&await import(e),this.start()}async start(){let e=JSON.parse(this.getAttribute("opts")),c=this.getAttribute("client");if(Astro[c]===void 0){window.addEventListener(`astro:${c}`,()=>this.start(),{once:!0});return}try{await Astro[c](async()=>{let n=this.getAttribute("renderer-url"),[h,{default:p}]=await Promise.all([import(this.getAttribute("component-url")),n?import(n):()=>()=>{}]),u=this.getAttribute("component-export")||"default";if(!u.includes("."))this.Component=h[u];else{this.Component=h;for(let f of u.split("."))this.Component=this.Component[f]}return this.hydrator=p,this.hydrate},e,this)}catch(n){console.error(`[astro-island] Error hydrating ${this.getAttribute("component-url")}`,n)}}attributeChangedCallback(){this.hydrate()}}d(y,"observedAttributes",["props"]),customElements.get("astro-island")||customElements.define("astro-island",y)}})();</script><astro-island uid="Z1WQ4OE" prefix="r0" component-url="/_astro/ThemeToggle.C_FMJT46.js" component-export="default" renderer-url="/_astro/client.AE0akZX9.js" props="{}" ssr client="load" opts="{&quot;name&quot;:&quot;ThemeToggle&quot;,&quot;value&quot;:true}" await-children><div class="w-9 h-9 p-2 rounded-lg bg-gray-100 dark:bg-gray-800"><div class="w-5 h-5"></div></div><!--astro:end--></astro-island> </div> </nav> </header> <main class="flex-1">  <article class="max-w-4xl mx-auto px-4 py-12"> <header class="mb-8"> <h1 class="text-4xl font-bold mb-4 text-gray-900 dark:text-white"> Designing a Distributed Rate Limiter </h1> <div class="flex items-center gap-4 text-gray-600 dark:text-gray-400"> <time> January 18, 2024 </time> </div> </header> <div class="prose prose-lg dark:prose-invert max-w-none mb-12"> <p>Rate limiting looks straightforward until you reason through making it work across multiple servers. The tempting approach is to treat it as a single layer: add a limiter at the gateway and call it done. But that breaks the moment someone hits internal services directly.</p>
+<h2 id="why-rate-limiting-matters">Why Rate Limiting Matters</h2>
+<p>Rate limiting protects your system from three main threats:</p>
+<ol>
+<li><strong>Accidental overload</strong> - A misconfigured client making thousands of requests</li>
+<li><strong>Malicious attacks</strong> - DDoS attempts or brute force attacks</li>
+<li><strong>Resource exhaustion</strong> - Preventing one user from consuming all available resources</li>
+</ol>
+<p>Without rate limiting, a single misbehaving client can take down your entire service.</p>
+<h2 id="requirements">Requirements</h2>
+<h3 id="functional-requirements">Functional Requirements</h3>
+<ul>
+<li>Limit requests per user/IP based on configurable thresholds</li>
+<li>Support multiple rate limit rules (per second, per minute, per hour)</li>
+<li>Return clear error messages when limits are exceeded</li>
+<li>Allow different limits for different API endpoints or user tiers</li>
+</ul>
+<h3 id="non-functional-requirements">Non-Functional Requirements</h3>
+<ul>
+<li><strong>Low latency</strong> - Adding &#x3C;5ms to request processing time</li>
+<li><strong>Highly available</strong> - Rate limiter failures shouldn’t block requests</li>
+<li><strong>Distributed</strong> - Work correctly across multiple application servers</li>
+<li><strong>Accurate</strong> - Enforce limits precisely, minimal false positives</li>
+</ul>
+<h2 id="rate-limiting-algorithms">Rate Limiting Algorithms</h2>
+<h3 id="1-token-bucket">1. Token Bucket</h3>
+<p>Think of it like a bucket that refills itself. Each user gets a bucket that refills with tokens at a fixed rate. Each request consumes one token. When the bucket is empty, requests get rejected.</p>
+<p>The token bucket handles burst traffic naturally because users accumulate tokens during quiet periods and can spend them all at once when a burst hits.</p>
+<p><strong>Advantages:</strong></p>
+<ul>
+<li>Handles burst traffic naturally</li>
+<li>Simple to implement</li>
+<li>Memory efficient</li>
+</ul>
+<p><strong>Implementation:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> TokenBucket</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#79B8FF"> __init__</span><span style="color:#E1E4E8">(self, capacity, refill_rate):</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.capacity </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> capacity</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.tokens </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> capacity</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.refill_rate </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> refill_rate  </span><span style="color:#6A737D"># tokens per second</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.last_refill </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> time.time()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> allow_request</span><span style="color:#E1E4E8">(self):</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._refill()</span></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.tokens </span><span style="color:#F97583">>=</span><span style="color:#79B8FF"> 1</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">            self</span><span style="color:#E1E4E8">.tokens </span><span style="color:#F97583">-=</span><span style="color:#79B8FF"> 1</span></span>
+<span class="line"><span style="color:#F97583">            return</span><span style="color:#79B8FF"> True</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> False</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> _refill</span><span style="color:#E1E4E8">(self):</span></span>
+<span class="line"><span style="color:#E1E4E8">        now </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> time.time()</span></span>
+<span class="line"><span style="color:#E1E4E8">        elapsed </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> now </span><span style="color:#F97583">-</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.last_refill</span></span>
+<span class="line"><span style="color:#E1E4E8">        tokens_to_add </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> elapsed </span><span style="color:#F97583">*</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.refill_rate</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.tokens </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> min</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">.capacity, </span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">.tokens </span><span style="color:#F97583">+</span><span style="color:#E1E4E8"> tokens_to_add)</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.last_refill </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> now</span></span></code></pre>
+<h3 id="2-leaky-bucket">2. Leaky Bucket</h3>
+<p>Similar to token bucket, but requests are processed at a fixed rate. Excess requests queue up (or are dropped if the queue is full).</p>
+<p><strong>Advantages:</strong></p>
+<ul>
+<li>Smooth output rate</li>
+<li>Protects downstream services</li>
+</ul>
+<p><strong>Disadvantages:</strong></p>
+<ul>
+<li>Queuing adds complexity</li>
+<li>Can create artificial delays</li>
+</ul>
+<h3 id="3-fixed-window">3. Fixed Window</h3>
+<p>Count requests in fixed time windows (e.g., 0-60 seconds, 60-120 seconds).</p>
+<p><strong>Advantages:</strong></p>
+<ul>
+<li>Simple implementation</li>
+<li>Low memory usage</li>
+</ul>
+<p><strong>Disadvantages:</strong></p>
+<ul>
+<li>Burst problem at window boundaries</li>
+<li>User can make 2x requests by splitting across windows</li>
+</ul>
+<h3 id="4-sliding-window-log">4. Sliding Window Log</h3>
+<p>Track timestamp of each request and count requests in a sliding window.</p>
+<p><strong>Advantages:</strong></p>
+<ul>
+<li>Most accurate</li>
+<li>No boundary issues</li>
+</ul>
+<p><strong>Disadvantages:</strong></p>
+<ul>
+<li>Memory intensive (stores all timestamps)</li>
+<li>Slower at high request rates</li>
+</ul>
+<h3 id="5-sliding-window-counter">5. Sliding Window Counter</h3>
+<p>Combines fixed window’s efficiency with sliding window’s accuracy. Uses weighted count from current and previous windows.</p>
+<p><strong>Formula:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>requests_in_window =</span></span>
+<span class="line"><span>    requests_in_current_window +</span></span>
+<span class="line"><span>    requests_in_previous_window * overlap_percentage</span></span></code></pre>
+<p><strong>Sliding window counter balances accuracy and performance.</strong> It avoids fixed window’s boundary problem without sliding window log’s memory cost.</p>
+<h2 id="architecture-design">Architecture Design</h2>
+<h3 id="single-server-rate-limiting">Single-Server Rate Limiting</h3>
+<p>For a single application server, an in-memory implementation works fine:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> collections </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> defaultdict</span></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> time</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> RateLimiter</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#79B8FF"> __init__</span><span style="color:#E1E4E8">(self):</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.buckets </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> defaultdict(</span><span style="color:#79B8FF">dict</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> is_allowed</span><span style="color:#E1E4E8">(self, user_id, limit, window):</span></span>
+<span class="line"><span style="color:#E1E4E8">        key </span><span style="color:#F97583">=</span><span style="color:#F97583"> f</span><span style="color:#9ECBFF">"</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">user_id</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">:</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">window</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">"</span></span>
+<span class="line"><span style="color:#E1E4E8">        now </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> time.time()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#E1E4E8"> key </span><span style="color:#F97583">not</span><span style="color:#F97583"> in</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.buckets:</span></span>
+<span class="line"><span style="color:#79B8FF">            self</span><span style="color:#E1E4E8">.buckets[key] </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#9ECBFF">                'count'</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">1</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">                'reset_time'</span><span style="color:#E1E4E8">: now </span><span style="color:#F97583">+</span><span style="color:#E1E4E8"> window</span></span>
+<span class="line"><span style="color:#E1E4E8">            }</span></span>
+<span class="line"><span style="color:#F97583">            return</span><span style="color:#79B8FF"> True</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">        bucket </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.buckets[key]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#E1E4E8"> now </span><span style="color:#F97583">>=</span><span style="color:#E1E4E8"> bucket[</span><span style="color:#9ECBFF">'reset_time'</span><span style="color:#E1E4E8">]:</span></span>
+<span class="line"><span style="color:#E1E4E8">            bucket[</span><span style="color:#9ECBFF">'count'</span><span style="color:#E1E4E8">] </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 1</span></span>
+<span class="line"><span style="color:#E1E4E8">            bucket[</span><span style="color:#9ECBFF">'reset_time'</span><span style="color:#E1E4E8">] </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> now </span><span style="color:#F97583">+</span><span style="color:#E1E4E8"> window</span></span>
+<span class="line"><span style="color:#F97583">            return</span><span style="color:#79B8FF"> True</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#E1E4E8"> bucket[</span><span style="color:#9ECBFF">'count'</span><span style="color:#E1E4E8">] </span><span style="color:#F97583">&#x3C;</span><span style="color:#E1E4E8"> limit:</span></span>
+<span class="line"><span style="color:#E1E4E8">            bucket[</span><span style="color:#9ECBFF">'count'</span><span style="color:#E1E4E8">] </span><span style="color:#F97583">+=</span><span style="color:#79B8FF"> 1</span></span>
+<span class="line"><span style="color:#F97583">            return</span><span style="color:#79B8FF"> True</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> False</span></span></code></pre>
+<h3 id="distributed-rate-limiting-with-redis">Distributed Rate Limiting with Redis</h3>
+<p>Production systems typically run multiple application servers. We need a centralized rate limiting solution.</p>
+<p><strong>Redis is perfect for this:</strong></p>
+<ul>
+<li>Atomic operations</li>
+<li>Built-in expiration</li>
+<li>Sub-millisecond latency</li>
+<li>Easy to scale</li>
+</ul>
+<p><strong>Implementation using Redis:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> redis</span></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> time</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> DistributedRateLimiter</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#79B8FF"> __init__</span><span style="color:#E1E4E8">(self, redis_client):</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.redis </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> redis_client</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> is_allowed</span><span style="color:#E1E4E8">(self, user_id, limit, window):</span></span>
+<span class="line"><span style="color:#9ECBFF">        """Token bucket implementation using Redis"""</span></span>
+<span class="line"><span style="color:#E1E4E8">        key </span><span style="color:#F97583">=</span><span style="color:#F97583"> f</span><span style="color:#9ECBFF">"rate_limit:</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">user_id</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">"</span></span>
+<span class="line"><span style="color:#E1E4E8">        now </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> time.time()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">        # Lua script for atomic operations</span></span>
+<span class="line"><span style="color:#E1E4E8">        lua_script </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> """</span></span>
+<span class="line"><span style="color:#9ECBFF">        local key = KEYS[1]</span></span>
+<span class="line"><span style="color:#9ECBFF">        local capacity = tonumber(ARGV[1])</span></span>
+<span class="line"><span style="color:#9ECBFF">        local rate = tonumber(ARGV[2])</span></span>
+<span class="line"><span style="color:#9ECBFF">        local now = tonumber(ARGV[3])</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9ECBFF">        local bucket = redis.call('HMGET', key, 'tokens', 'last_refill')</span></span>
+<span class="line"><span style="color:#9ECBFF">        local tokens = tonumber(bucket[1])</span></span>
+<span class="line"><span style="color:#9ECBFF">        local last_refill = tonumber(bucket[2])</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9ECBFF">        if tokens == nil then</span></span>
+<span class="line"><span style="color:#9ECBFF">            tokens = capacity</span></span>
+<span class="line"><span style="color:#9ECBFF">            last_refill = now</span></span>
+<span class="line"><span style="color:#9ECBFF">        end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9ECBFF">        -- Refill tokens</span></span>
+<span class="line"><span style="color:#9ECBFF">        local elapsed = now - last_refill</span></span>
+<span class="line"><span style="color:#9ECBFF">        local tokens_to_add = elapsed * rate</span></span>
+<span class="line"><span style="color:#9ECBFF">        tokens = math.min(capacity, tokens + tokens_to_add)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9ECBFF">        -- Try to consume a token</span></span>
+<span class="line"><span style="color:#9ECBFF">        local allowed = 0</span></span>
+<span class="line"><span style="color:#9ECBFF">        if tokens >= 1 then</span></span>
+<span class="line"><span style="color:#9ECBFF">            tokens = tokens - 1</span></span>
+<span class="line"><span style="color:#9ECBFF">            allowed = 1</span></span>
+<span class="line"><span style="color:#9ECBFF">        end</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9ECBFF">        -- Update bucket</span></span>
+<span class="line"><span style="color:#9ECBFF">        redis.call('HMSET', key, 'tokens', tokens, 'last_refill', now)</span></span>
+<span class="line"><span style="color:#9ECBFF">        redis.call('EXPIRE', key, 3600)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#9ECBFF">        return allowed</span></span>
+<span class="line"><span style="color:#9ECBFF">        """</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">        result </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.redis.eval(</span></span>
+<span class="line"><span style="color:#E1E4E8">            lua_script,</span></span>
+<span class="line"><span style="color:#79B8FF">            1</span><span style="color:#E1E4E8">,  </span><span style="color:#6A737D"># number of keys</span></span>
+<span class="line"><span style="color:#E1E4E8">            key,  </span><span style="color:#6A737D"># KEYS[1]</span></span>
+<span class="line"><span style="color:#E1E4E8">            limit,  </span><span style="color:#6A737D"># ARGV[1] - capacity</span></span>
+<span class="line"><span style="color:#E1E4E8">            limit </span><span style="color:#F97583">/</span><span style="color:#E1E4E8"> window,  </span><span style="color:#6A737D"># ARGV[2] - refill rate</span></span>
+<span class="line"><span style="color:#E1E4E8">            now  </span><span style="color:#6A737D"># ARGV[3] - current time</span></span>
+<span class="line"><span style="color:#E1E4E8">        )</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> result </span><span style="color:#F97583">==</span><span style="color:#79B8FF"> 1</span></span></code></pre>
+<p><strong>Why Lua scripts?</strong></p>
+<ul>
+<li>All operations execute atomically</li>
+<li>Reduces network round trips</li>
+<li>Prevents race conditions</li>
+</ul>
+<h3 id="rate-limiter-architecture">Rate Limiter Architecture</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>                    ┌─────────────────┐</span></span>
+<span class="line"><span>                    │  Load Balancer  │</span></span>
+<span class="line"><span>                    └────────┬────────┘</span></span>
+<span class="line"><span>                             │</span></span>
+<span class="line"><span>               ┌─────────────┼─────────────┐</span></span>
+<span class="line"><span>               │             │             │</span></span>
+<span class="line"><span>          ┌────▼───┐    ┌────▼───┐   ┌────▼───┐</span></span>
+<span class="line"><span>          │  App   │    │  App   │   │  App   │</span></span>
+<span class="line"><span>          │ Server │    │ Server │   │ Server │</span></span>
+<span class="line"><span>          └────┬───┘    └────┬───┘   └────┬───┘</span></span>
+<span class="line"><span>               │             │             │</span></span>
+<span class="line"><span>               └─────────────┼─────────────┘</span></span>
+<span class="line"><span>                             │</span></span>
+<span class="line"><span>                      ┌──────▼──────┐</span></span>
+<span class="line"><span>                      │    Redis    │</span></span>
+<span class="line"><span>                      │   Cluster   │</span></span>
+<span class="line"><span>                      └─────────────┘</span></span></code></pre>
+<h2 id="advanced-features">Advanced Features</h2>
+<h3 id="1-multiple-rate-limit-rules">1. Multiple Rate Limit Rules</h3>
+<p>Different limits for different endpoints:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#79B8FF">RATE_LIMITS</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#9ECBFF">    '/api/login'</span><span style="color:#E1E4E8">: {</span><span style="color:#9ECBFF">'limit'</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">5</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">'window'</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">60</span><span style="color:#E1E4E8">},  </span><span style="color:#6A737D"># 5 requests per minute</span></span>
+<span class="line"><span style="color:#9ECBFF">    '/api/search'</span><span style="color:#E1E4E8">: {</span><span style="color:#9ECBFF">'limit'</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">100</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">'window'</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">60</span><span style="color:#E1E4E8">},  </span><span style="color:#6A737D"># 100 requests per minute</span></span>
+<span class="line"><span style="color:#9ECBFF">    '/api/upload'</span><span style="color:#E1E4E8">: {</span><span style="color:#9ECBFF">'limit'</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">10</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">'window'</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">3600</span><span style="color:#E1E4E8">},  </span><span style="color:#6A737D"># 10 requests per hour</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> check_rate_limit</span><span style="color:#E1E4E8">(user_id, endpoint):</span></span>
+<span class="line"><span style="color:#E1E4E8">    config </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> RATE_LIMITS</span><span style="color:#E1E4E8">.get(endpoint, {</span><span style="color:#9ECBFF">'limit'</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">1000</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">'window'</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">60</span><span style="color:#E1E4E8">})</span></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> rate_limiter.is_allowed(</span></span>
+<span class="line"><span style="color:#F97583">        f</span><span style="color:#9ECBFF">"</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">user_id</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">:</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">endpoint</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">        config[</span><span style="color:#9ECBFF">'limit'</span><span style="color:#E1E4E8">],</span></span>
+<span class="line"><span style="color:#E1E4E8">        config[</span><span style="color:#9ECBFF">'window'</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#E1E4E8">    )</span></span></code></pre>
+<h3 id="2-user-tiers">2. User Tiers</h3>
+<p>Different limits for free vs. paid users:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#79B8FF">USER_TIERS</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#9ECBFF">    'free'</span><span style="color:#E1E4E8">: {</span><span style="color:#9ECBFF">'requests_per_minute'</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">60</span><span style="color:#E1E4E8">},</span></span>
+<span class="line"><span style="color:#9ECBFF">    'basic'</span><span style="color:#E1E4E8">: {</span><span style="color:#9ECBFF">'requests_per_minute'</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">1000</span><span style="color:#E1E4E8">},</span></span>
+<span class="line"><span style="color:#9ECBFF">    'premium'</span><span style="color:#E1E4E8">: {</span><span style="color:#9ECBFF">'requests_per_minute'</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">10000</span><span style="color:#E1E4E8">},</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> get_rate_limit</span><span style="color:#E1E4E8">(user):</span></span>
+<span class="line"><span style="color:#E1E4E8">    tier </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> user.subscription_tier</span></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#79B8FF"> USER_TIERS</span><span style="color:#E1E4E8">[tier][</span><span style="color:#9ECBFF">'requests_per_minute'</span><span style="color:#E1E4E8">]</span></span></code></pre>
+<h3 id="3-response-headers">3. Response Headers</h3>
+<p>Inform clients about their rate limit status:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#E1E4E8">response.headers[</span><span style="color:#9ECBFF">'X-RateLimit-Limit'</span><span style="color:#E1E4E8">] </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> str</span><span style="color:#E1E4E8">(limit)</span></span>
+<span class="line"><span style="color:#E1E4E8">response.headers[</span><span style="color:#9ECBFF">'X-RateLimit-Remaining'</span><span style="color:#E1E4E8">] </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> str</span><span style="color:#E1E4E8">(remaining)</span></span>
+<span class="line"><span style="color:#E1E4E8">response.headers[</span><span style="color:#9ECBFF">'X-RateLimit-Reset'</span><span style="color:#E1E4E8">] </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> str</span><span style="color:#E1E4E8">(reset_time)</span></span></code></pre>
+<h3 id="4-graceful-degradation">4. Graceful Degradation</h3>
+<p>If Redis is unavailable, allow requests through (fail open) rather than blocking everything:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> is_allowed_with_fallback</span><span style="color:#E1E4E8">(user_id, limit, window):</span></span>
+<span class="line"><span style="color:#F97583">    try</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> rate_limiter.is_allowed(user_id, limit, window)</span></span>
+<span class="line"><span style="color:#F97583">    except</span><span style="color:#E1E4E8"> redis.RedisError:</span></span>
+<span class="line"><span style="color:#6A737D">        # Log error and allow request</span></span>
+<span class="line"><span style="color:#E1E4E8">        logger.error(</span><span style="color:#9ECBFF">"Rate limiter unavailable, allowing request"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> True</span></span></code></pre>
+<h2 id="handling-edge-cases">Handling Edge Cases</h2>
+<h3 id="race-conditions">Race Conditions</h3>
+<p>Use Redis transactions or Lua scripts to prevent race conditions between checking and updating counters.</p>
+<h3 id="clock-skew">Clock Skew</h3>
+<p>In distributed systems, server clocks can drift. Use Redis’s time command to get a consistent timestamp:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#E1E4E8">redis_time </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> redis.time()</span></span>
+<span class="line"><span style="color:#E1E4E8">now </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> redis_time[</span><span style="color:#79B8FF">0</span><span style="color:#E1E4E8">] </span><span style="color:#F97583">+</span><span style="color:#E1E4E8"> redis_time[</span><span style="color:#79B8FF">1</span><span style="color:#E1E4E8">] </span><span style="color:#F97583">/</span><span style="color:#79B8FF"> 1000000.0</span></span></code></pre>
+<h3 id="memory-management">Memory Management</h3>
+<p>Set TTL on all keys to prevent memory leaks:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#E1E4E8">redis.expire(key, ttl)</span></span></code></pre>
+<p>For Redis Cluster, use consistent hashing to distribute rate limit data evenly across nodes.</p>
+<h2 id="monitoring-and-alerting">Monitoring and Alerting</h2>
+<p>Track these metrics:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#6A737D"># Rate limiter performance</span></span>
+<span class="line"><span style="color:#F97583">-</span><span style="color:#E1E4E8"> rate_limit_check_latency_ms</span></span>
+<span class="line"><span style="color:#F97583">-</span><span style="color:#E1E4E8"> rate_limit_redis_errors</span></span>
+<span class="line"><span style="color:#F97583">-</span><span style="color:#E1E4E8"> rate_limit_fallback_count</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Rate limiting effectiveness</span></span>
+<span class="line"><span style="color:#F97583">-</span><span style="color:#E1E4E8"> requests_rate_limited_per_endpoint</span></span>
+<span class="line"><span style="color:#F97583">-</span><span style="color:#E1E4E8"> top_rate_limited_users</span></span>
+<span class="line"><span style="color:#F97583">-</span><span style="color:#E1E4E8"> rate_limit_rule_hits</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># System health</span></span>
+<span class="line"><span style="color:#F97583">-</span><span style="color:#E1E4E8"> redis_connection_pool_size</span></span>
+<span class="line"><span style="color:#F97583">-</span><span style="color:#E1E4E8"> redis_memory_usage</span></span>
+<span class="line"><span style="color:#F97583">-</span><span style="color:#E1E4E8"> rate_limit_config_changes</span></span></code></pre>
+<h2 id="testing-strategy">Testing Strategy</h2>
+<h3 id="unit-tests">Unit Tests</h3>
+<p>Test the algorithm logic:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> test_token_bucket_refill</span><span style="color:#E1E4E8">():</span></span>
+<span class="line"><span style="color:#E1E4E8">    bucket </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> TokenBucket(</span><span style="color:#FFAB70">capacity</span><span style="color:#F97583">=</span><span style="color:#79B8FF">10</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">refill_rate</span><span style="color:#F97583">=</span><span style="color:#79B8FF">1</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Consume all tokens</span></span>
+<span class="line"><span style="color:#F97583">    for</span><span style="color:#E1E4E8"> _ </span><span style="color:#F97583">in</span><span style="color:#79B8FF"> range</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">10</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#F97583">        assert</span><span style="color:#E1E4E8"> bucket.allow_request() </span><span style="color:#F97583">==</span><span style="color:#79B8FF"> True</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Bucket empty</span></span>
+<span class="line"><span style="color:#F97583">    assert</span><span style="color:#E1E4E8"> bucket.allow_request() </span><span style="color:#F97583">==</span><span style="color:#79B8FF"> False</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Wait for refill</span></span>
+<span class="line"><span style="color:#E1E4E8">    time.sleep(</span><span style="color:#79B8FF">5</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Should have 5 tokens now</span></span>
+<span class="line"><span style="color:#F97583">    for</span><span style="color:#E1E4E8"> _ </span><span style="color:#F97583">in</span><span style="color:#79B8FF"> range</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">5</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#F97583">        assert</span><span style="color:#E1E4E8"> bucket.allow_request() </span><span style="color:#F97583">==</span><span style="color:#79B8FF"> True</span></span></code></pre>
+<h3 id="load-tests">Load Tests</h3>
+<p>Verify behavior under high concurrency:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#6A737D"># Locust load test</span></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> RateLimitTest</span><span style="color:#E1E4E8">(</span><span style="color:#B392F0">HttpUser</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#E1E4E8">    wait_time </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> between(</span><span style="color:#79B8FF">0.1</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">0.5</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">    @task</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> test_rate_limit</span><span style="color:#E1E4E8">(self):</span></span>
+<span class="line"><span style="color:#E1E4E8">        response </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.client.get(</span><span style="color:#9ECBFF">"/api/test"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#E1E4E8"> response.status_code </span><span style="color:#F97583">==</span><span style="color:#79B8FF"> 429</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#6A737D">            # Rate limited</span></span>
+<span class="line"><span style="color:#F97583">            assert</span><span style="color:#9ECBFF"> 'Retry-After'</span><span style="color:#F97583"> in</span><span style="color:#E1E4E8"> response.headers</span></span></code></pre>
+<h2 id="trade-offs-and-decisions">Trade-offs and Decisions</h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Choice</th><th>Trade-off</th></tr></thead><tbody><tr><td>Token bucket</td><td>Allows bursts vs. Strict rate enforcement</td></tr><tr><td>Redis Lua scripts</td><td>Atomic operations vs. Increased complexity</td></tr><tr><td>Fail open on errors</td><td>Availability vs. Protection</td></tr><tr><td>Per-endpoint limits</td><td>Fine control vs. Configuration complexity</td></tr></tbody></table>
+<h2 id="production-considerations">Production Considerations</h2>
+<ol>
+<li><strong>Start conservative</strong>: Begin with generous limits and tighten based on metrics</li>
+<li><strong>Document clearly</strong>: Users need to know their limits and how to request increases</li>
+<li><strong>Provide bypass tokens</strong>: Allow trusted partners to skip rate limiting</li>
+<li><strong>Monitor false positives</strong>: Track legitimate requests being blocked</li>
+<li><strong>Plan for scaling</strong>: Redis Cluster handles millions of rate limit checks per second</li>
+</ol>
+<h2 id="when-to-use-what">When to Use What</h2>
+<p><strong>Use in-memory rate limiting when:</strong></p>
+<ul>
+<li>Single application server</li>
+<li>Low traffic (&#x3C;1000 requests/second)</li>
+<li>Rate limiting is not critical for security</li>
+</ul>
+<p><strong>Use Redis rate limiting when:</strong></p>
+<ul>
+<li>Multiple application servers</li>
+<li>Need accurate distributed rate limiting</li>
+<li>High traffic volumes</li>
+<li>Rate limiting is security-critical</li>
+</ul>
+<p><strong>Use edge rate limiting (CloudFlare, AWS WAF) when:</strong></p>
+<ul>
+<li>Protecting against DDoS</li>
+<li>Global traffic distribution</li>
+<li>Need rate limiting before requests hit your infrastructure</li>
+</ul>
+<h2 id="conclusion">Conclusion</h2>
+<p>Rate limiting protects systems without blocking legitimate users. The token bucket algorithm handles bursts well. Redis provides distributed coordination with sub-millisecond latency. The sliding window counter balances accuracy against memory cost.</p>
+<p>The goal is not perfect enforcement. It is protecting resources while keeping the experience good for legitimate users.</p>
+<p>Feel free to reach out on <a href="https://twitter.com/anudeepsamaiya">Twitter</a> or <a href="https://www.linkedin.com/in/anudeepsamaiya/">LinkedIn</a> if you want to discuss rate limiting strategies or implementation details.</p> </div> <!-- Social Share Buttons --> <div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-800"> <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Share this post:</p> <div class="flex gap-3"> <a href="https://twitter.com/intent/tweet?text=Designing%20a%20Distributed%20Rate%20Limiter&url=https%3A%2F%2Fanudeepsamaiya.github.io%2Fblog%2F2024-01-18-designing-a-rate-limiter%2F" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors" aria-label="Share on Twitter"> <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"> <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path> </svg>
+Twitter
+</a> <a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fanudeepsamaiya.github.io%2Fblog%2F2024-01-18-designing-a-rate-limiter%2F" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg transition-colors" aria-label="Share on LinkedIn"> <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"> <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"></path> </svg>
+LinkedIn
+</a> <a href="https://news.ycombinator.com/submitlink?u=https%3A%2F%2Fanudeepsamaiya.github.io%2Fblog%2F2024-01-18-designing-a-rate-limiter%2F&t=Designing%20a%20Distributed%20Rate%20Limiter" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors" aria-label="Share on Hacker News"> <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"> <path d="M0 24V0h24v24H0zM6.951 5.896l4.112 7.708v5.064h1.583v-4.972l4.148-7.799h-1.749l-2.457 4.875c-.372.745-.688 1.434-.688 1.434s-.297-.708-.651-1.434L8.831 5.896h-1.88z"></path> </svg>
+HN
+</a> </div> </div> <!-- Tags at bottom --> <div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-800"> <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Tags:</p> <div class="flex flex-wrap gap-2"> <span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#system-design </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#rate-limiting </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#redis </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#distributed-systems </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#backend </span> </div> </div> <section class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800"><h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+Related Posts
+</h2><div class="space-y-4"><a href="/blog/2024-06-23-building-a-url-shortener" class="block p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Building a URL Shortener That Scales</h3><p class="text-gray-600 dark:text-gray-400 text-sm mb-2">Designing and implementing a production-ready URL shortener with custom domains, analytics, and high availability.</p><div class="flex gap-2 flex-wrap"><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">system-design</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">distributed-systems</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">backend</span></div></a><a href="/blog/2025-03-05-url-shortener-system-design-part1-hld" class="block p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">URL Shortener System Design (Part 1): High-Level Architecture</h3><p class="text-gray-600 dark:text-gray-400 text-sm mb-2">Master the fundamentals of designing a production URL shortener: requirements, capacity planning, distributed ID generation, database design, and caching strategies for system design interviews.</p><div class="flex gap-2 flex-wrap"><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">system-design</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">distributed-systems</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">backend</span></div></a><a href="/blog/2025-07-16-url-shortener-system-design-part2-lld" class="block p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">URL Shortener System Design (Part 2): Production Implementation Deep Dive</h3><p class="text-gray-600 dark:text-gray-400 text-sm mb-2">From architecture to code: implement production-grade analytics pipelines, security layers, and observability for URL shorteners. Complete with Kafka streaming, rate limiting, and monitoring.</p><div class="flex gap-2 flex-wrap"><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">system-design</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">distributed-systems</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">backend</span></div></a></div></section> <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800"> <a href="/blog" class="text-blue-600 dark:text-blue-400 hover:underline">
+← Back to all posts
+</a> </div> </article> <div class="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 py-8 mt-12"> <div class="max-w-4xl mx-auto px-4"> <div class="text-center mb-6"> <h2 class="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Let's Connect! 💬</h2> <p class="text-base text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
+Whether you're looking to hire, want to collaborate on a project, or just want to chat about tech—I'd love to hear from you!
+</p> </div> <div class="flex flex-col sm:flex-row items-center justify-center gap-6"> <astro-island uid="ZC9c4W" prefix="r1" component-url="/_astro/ContactForm.DeBm0i4w.js" component-export="default" renderer-url="/_astro/client.AE0akZX9.js" props="{}" ssr client="load" opts="{&quot;name&quot;:&quot;ContactForm&quot;,&quot;value&quot;:true}"></astro-island> <div class="flex items-center gap-4"> <div class="h-8 w-px bg-gray-300 dark:bg-gray-700 hidden sm:block"></div> <p class="text-gray-600 dark:text-gray-400 text-sm hidden sm:block">or find me on</p> </div> <div class="flex gap-4"> <a href="https://github.com/anudeepsamaiya" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="GitHub"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/github.svg" alt="GitHub" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://twitter.com/anudeepsamaiya" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="X (Twitter)"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/x.svg" alt="X (Twitter)" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://www.linkedin.com/in/anudeepsamaiya/" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="LinkedIn"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/linkedin.svg" alt="LinkedIn" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://stackoverflow.com/users/2079692/anudeep-samaiya" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="Stack Overflow"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/stackoverflow.svg" alt="Stack Overflow" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://leetcode.com/anudeepsamaiya/" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="LeetCode"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/leetcode.svg" alt="LeetCode" class="w-6 h-6 opacity-60 dark:invert"> </a> </div> </div> </div> </div>  </main> <footer class="py-6 px-4 border-t border-gray-200 dark:border-gray-800"> <div class="max-w-4xl mx-auto text-center text-gray-600 dark:text-gray-400 text-sm"> <p class="mb-2"> © 2018-2026 Anudeep Samaiya. All rights reserved. </p> <p>
+Code:
+<a href="https://github.com/anudeepsamaiya/anudeepsamaiya.github.io/blob/master/LICENSE" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline mx-1">
+MIT License
+</a>
+| Content:
+<a href="https://github.com/anudeepsamaiya/anudeepsamaiya.github.io/blob/master/LICENSE-CONTENT" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline mx-1">
+CC BY 4.0
+</a> </p> </div> </footer> </div> </body></html> 
