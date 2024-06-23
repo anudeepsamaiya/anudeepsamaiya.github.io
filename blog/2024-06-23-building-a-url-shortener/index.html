@@ -1,0 +1,602 @@
+<!DOCTYPE html><html lang="en-US"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description" content="Designing and implementing a production-ready URL shortener with custom domains, analytics, and high availability."><meta name="author" content="Anudeep Samaiya"><meta name="google-site-verification" content="twVFs_dUxCyldlt-Sif72GezMsXbI0wKJEVTBJ1A22g"><link rel="canonical" href="https://anudeepsamaiya.github.io/blog/2024-06-23-building-a-url-shortener/"><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/site.webmanifest"><title>Building a URL Shortener That Scales | Anudeep Samaiya</title><script>
+      // Initialize theme before page renders to prevent flash
+      (function() {
+        const theme = localStorage.getItem('theme') || 'light';
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script><link rel="stylesheet" href="/_astro/about.Cg2y2hoq.css">
+<style>.prose pre{overflow-x:auto}.prose pre:has(code:contains("┌")),.prose pre:has(code:contains("│")),.prose pre:has(code:contains("▶")),.prose pre:has(code:contains("└")){text-align:center;display:flex;justify-content:center}
+</style></head> <body class="bg-white dark:bg-gray-900"> <div class="min-h-screen flex flex-col"> <header class="py-6 px-4 border-b border-gray-200 dark:border-gray-800"> <nav class="max-w-4xl mx-auto flex justify-between items-center"> <a href="/" class="text-2xl font-bold text-gray-900 dark:text-white"> Anudeep Samaiya </a> <div class="flex items-center gap-6"> <ul class="flex gap-6"> <li> <a href="/about" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"> About </a> </li><li> <a href="/blog" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"> Blog </a> </li><li> <a href="/reading" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"> Reading </a> </li> </ul> <style>astro-island,astro-slot,astro-static-slot{display:contents}</style><script>(()=>{var e=async t=>{await(await t())()};(self.Astro||(self.Astro={})).load=e;window.dispatchEvent(new Event("astro:load"));})();</script><script>(()=>{var A=Object.defineProperty;var g=(i,o,a)=>o in i?A(i,o,{enumerable:!0,configurable:!0,writable:!0,value:a}):i[o]=a;var d=(i,o,a)=>g(i,typeof o!="symbol"?o+"":o,a);{let i={0:t=>m(t),1:t=>a(t),2:t=>new RegExp(t),3:t=>new Date(t),4:t=>new Map(a(t)),5:t=>new Set(a(t)),6:t=>BigInt(t),7:t=>new URL(t),8:t=>new Uint8Array(t),9:t=>new Uint16Array(t),10:t=>new Uint32Array(t),11:t=>1/0*t},o=t=>{let[l,e]=t;return l in i?i[l](e):void 0},a=t=>t.map(o),m=t=>typeof t!="object"||t===null?t:Object.fromEntries(Object.entries(t).map(([l,e])=>[l,o(e)]));class y extends HTMLElement{constructor(){super(...arguments);d(this,"Component");d(this,"hydrator");d(this,"hydrate",async()=>{var b;if(!this.hydrator||!this.isConnected)return;let e=(b=this.parentElement)==null?void 0:b.closest("astro-island[ssr]");if(e){e.addEventListener("astro:hydrate",this.hydrate,{once:!0});return}let c=this.querySelectorAll("astro-slot"),n={},h=this.querySelectorAll("template[data-astro-template]");for(let r of h){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("data-astro-template")||"default"]=r.innerHTML,r.remove())}for(let r of c){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("name")||"default"]=r.innerHTML)}let p;try{p=this.hasAttribute("props")?m(JSON.parse(this.getAttribute("props"))):{}}catch(r){let s=this.getAttribute("component-url")||"<unknown>",v=this.getAttribute("component-export");throw v&&(s+=` (export ${v})`),console.error(`[hydrate] Error parsing props for component ${s}`,this.getAttribute("props"),r),r}let u;await this.hydrator(this)(this.Component,p,n,{client:this.getAttribute("client")}),this.removeAttribute("ssr"),this.dispatchEvent(new CustomEvent("astro:hydrate"))});d(this,"unmount",()=>{this.isConnected||this.dispatchEvent(new CustomEvent("astro:unmount"))})}disconnectedCallback(){document.removeEventListener("astro:after-swap",this.unmount),document.addEventListener("astro:after-swap",this.unmount,{once:!0})}connectedCallback(){if(!this.hasAttribute("await-children")||document.readyState==="interactive"||document.readyState==="complete")this.childrenConnectedCallback();else{let e=()=>{document.removeEventListener("DOMContentLoaded",e),c.disconnect(),this.childrenConnectedCallback()},c=new MutationObserver(()=>{var n;((n=this.lastChild)==null?void 0:n.nodeType)===Node.COMMENT_NODE&&this.lastChild.nodeValue==="astro:end"&&(this.lastChild.remove(),e())});c.observe(this,{childList:!0}),document.addEventListener("DOMContentLoaded",e)}}async childrenConnectedCallback(){let e=this.getAttribute("before-hydration-url");e&&await import(e),this.start()}async start(){let e=JSON.parse(this.getAttribute("opts")),c=this.getAttribute("client");if(Astro[c]===void 0){window.addEventListener(`astro:${c}`,()=>this.start(),{once:!0});return}try{await Astro[c](async()=>{let n=this.getAttribute("renderer-url"),[h,{default:p}]=await Promise.all([import(this.getAttribute("component-url")),n?import(n):()=>()=>{}]),u=this.getAttribute("component-export")||"default";if(!u.includes("."))this.Component=h[u];else{this.Component=h;for(let f of u.split("."))this.Component=this.Component[f]}return this.hydrator=p,this.hydrate},e,this)}catch(n){console.error(`[astro-island] Error hydrating ${this.getAttribute("component-url")}`,n)}}attributeChangedCallback(){this.hydrate()}}d(y,"observedAttributes",["props"]),customElements.get("astro-island")||customElements.define("astro-island",y)}})();</script><astro-island uid="Z1WQ4OE" prefix="r0" component-url="/_astro/ThemeToggle.C_FMJT46.js" component-export="default" renderer-url="/_astro/client.AE0akZX9.js" props="{}" ssr client="load" opts="{&quot;name&quot;:&quot;ThemeToggle&quot;,&quot;value&quot;:true}" await-children><div class="w-9 h-9 p-2 rounded-lg bg-gray-100 dark:bg-gray-800"><div class="w-5 h-5"></div></div><!--astro:end--></astro-island> </div> </nav> </header> <main class="flex-1">  <article class="max-w-4xl mx-auto px-4 py-12"> <header class="mb-8"> <h1 class="text-4xl font-bold mb-4 text-gray-900 dark:text-white"> Building a URL Shortener That Scales </h1> <div class="flex items-center gap-4 text-gray-600 dark:text-gray-400"> <time> June 23, 2024 </time> </div> </header> <div class="prose prose-lg dark:prose-invert max-w-none mb-12"> <p>URL shorteners like bit.ly and TinyURL handle billions of redirects per month. Behind their simple interface lies an interesting set of engineering challenges: generating unique IDs at scale, handling massive read traffic, and tracking analytics without impacting redirect latency.</p>
+<p>When I reason through the design, the interesting decisions come in layers. The first question is how you generate short codes without collisions. The second is how you handle 100:1 read-to-write ratios. The third is how analytics stay fast without slowing down the critical redirect path. This post works through each of those decisions.</p>
+<h2 id="core-requirements">Core Requirements</h2>
+<h3 id="functional">Functional</h3>
+<ul>
+<li><strong>URL shortening</strong>: Convert long URLs to short codes</li>
+<li><strong>URL redirection</strong>: Redirect short codes to original URLs</li>
+<li><strong>Custom aliases</strong>: Allow users to choose their own short codes</li>
+<li><strong>Analytics</strong>: Track clicks, locations, devices, referrers</li>
+<li><strong>Expiration</strong>: Support TTL for temporary links</li>
+<li><strong>User management</strong>: Associate URLs with user accounts</li>
+</ul>
+<h3 id="non-functional">Non-Functional</h3>
+<ul>
+<li><strong>High availability</strong>: 99.99% uptime (52 minutes downtime per year)</li>
+<li><strong>Low latency</strong>: &#x3C;100ms redirect time globally</li>
+<li><strong>High throughput</strong>: Handle 10,000+ redirects per second</li>
+<li><strong>Scalability</strong>: Support billions of URLs</li>
+<li><strong>Durability</strong>: Zero data loss</li>
+</ul>
+<h2 id="capacity-planning">Capacity Planning</h2>
+<h3 id="traffic-estimation">Traffic Estimation</h3>
+<p>Starting assumptions:</p>
+<ul>
+<li>100 million URLs created per month</li>
+<li>100:1 read-to-write ratio</li>
+<li>Average URL lifetime: 5 years</li>
+</ul>
+<p><strong>Calculations:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Writes:</span></span>
+<span class="line"><span>- 100M URLs/month = 40 URLs/second</span></span>
+<span class="line"><span>- Peak (3x average): 120 URLs/second</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Reads:</span></span>
+<span class="line"><span>- 100:1 ratio = 10B redirects/month</span></span>
+<span class="line"><span>- 4,000 redirects/second average</span></span>
+<span class="line"><span>- Peak: 12,000 redirects/second</span></span></code></pre>
+<h3 id="storage-requirements">Storage Requirements</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Per URL:</span></span>
+<span class="line"><span>- Short code: 7 bytes</span></span>
+<span class="line"><span>- Original URL: 500 bytes (average)</span></span>
+<span class="line"><span>- Metadata: 100 bytes</span></span>
+<span class="line"><span>- Total: ~600 bytes</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Storage over 5 years:</span></span>
+<span class="line"><span>- 100M × 12 × 5 = 6 billion URLs</span></span>
+<span class="line"><span>- 6B × 600 bytes = 3.6 TB</span></span>
+<span class="line"><span>- With 3x replication: ~11 TB</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Cache:</span></span>
+<span class="line"><span>- Cache top 20% hot URLs</span></span>
+<span class="line"><span>- ~1.5 TB compressed</span></span></code></pre>
+<h2 id="generating-short-codes">Generating Short Codes</h2>
+<p>This is the most interesting part. We need short codes that are:</p>
+<ul>
+<li>Unique (no collisions)</li>
+<li>Short (6-7 characters)</li>
+<li>Unpredictable (for security)</li>
+<li>Fast to generate</li>
+</ul>
+<h3 id="base62-encoding">Base62 Encoding</h3>
+<p>Use 62 characters: [a-z, A-Z, 0-9]</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#79B8FF">BASE62</span><span style="color:#F97583"> =</span><span style="color:#9ECBFF"> "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> base62_encode</span><span style="color:#E1E4E8">(num):</span></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#E1E4E8"> num </span><span style="color:#F97583">==</span><span style="color:#79B8FF"> 0</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> BASE62</span><span style="color:#E1E4E8">[</span><span style="color:#79B8FF">0</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    result </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> []</span></span>
+<span class="line"><span style="color:#F97583">    while</span><span style="color:#E1E4E8"> num </span><span style="color:#F97583">></span><span style="color:#79B8FF"> 0</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        remainder </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> num </span><span style="color:#F97583">%</span><span style="color:#79B8FF"> 62</span></span>
+<span class="line"><span style="color:#E1E4E8">        result.append(</span><span style="color:#79B8FF">BASE62</span><span style="color:#E1E4E8">[remainder])</span></span>
+<span class="line"><span style="color:#E1E4E8">        num </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> num </span><span style="color:#F97583">//</span><span style="color:#79B8FF"> 62</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#9ECBFF"> ''</span><span style="color:#E1E4E8">.join(</span><span style="color:#79B8FF">reversed</span><span style="color:#E1E4E8">(result))</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> base62_decode</span><span style="color:#E1E4E8">(string):</span></span>
+<span class="line"><span style="color:#E1E4E8">    num </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 0</span></span>
+<span class="line"><span style="color:#F97583">    for</span><span style="color:#E1E4E8"> char </span><span style="color:#F97583">in</span><span style="color:#E1E4E8"> string:</span></span>
+<span class="line"><span style="color:#E1E4E8">        num </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> num </span><span style="color:#F97583">*</span><span style="color:#79B8FF"> 62</span><span style="color:#F97583"> +</span><span style="color:#79B8FF"> BASE62</span><span style="color:#E1E4E8">.index(char)</span></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> num</span></span></code></pre>
+<p>With 7 characters: 62^7 = 3.5 trillion possible codes</p>
+<h3 id="approach-1-hash-based-generation">Approach 1: Hash-Based Generation</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> hashlib</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> generate_short_code_hash</span><span style="color:#E1E4E8">(long_url):</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span></span>
+<span class="line"><span style="color:#9ECBFF">    Generate short code by hashing URL</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span></span>
+<span class="line"><span style="color:#6A737D">    # Create hash</span></span>
+<span class="line"><span style="color:#E1E4E8">    hash_value </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> hashlib.md5(long_url.encode()).hexdigest()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Take first 7 characters</span></span>
+<span class="line"><span style="color:#E1E4E8">    short_code </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> base62_encode(</span><span style="color:#79B8FF">int</span><span style="color:#E1E4E8">(hash_value[:</span><span style="color:#79B8FF">8</span><span style="color:#E1E4E8">], </span><span style="color:#79B8FF">16</span><span style="color:#E1E4E8">))[:</span><span style="color:#79B8FF">7</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Handle collisions</span></span>
+<span class="line"><span style="color:#E1E4E8">    attempt </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 0</span></span>
+<span class="line"><span style="color:#F97583">    while</span><span style="color:#E1E4E8"> exists_in_database(short_code):</span></span>
+<span class="line"><span style="color:#6A737D">        # Append attempt counter and rehash</span></span>
+<span class="line"><span style="color:#E1E4E8">        new_input </span><span style="color:#F97583">=</span><span style="color:#F97583"> f</span><span style="color:#9ECBFF">"</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">long_url</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">_</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">attempt</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">"</span></span>
+<span class="line"><span style="color:#E1E4E8">        hash_value </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> hashlib.md5(new_input.encode()).hexdigest()</span></span>
+<span class="line"><span style="color:#E1E4E8">        short_code </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> base62_encode(</span><span style="color:#79B8FF">int</span><span style="color:#E1E4E8">(hash_value[:</span><span style="color:#79B8FF">8</span><span style="color:#E1E4E8">], </span><span style="color:#79B8FF">16</span><span style="color:#E1E4E8">))[:</span><span style="color:#79B8FF">7</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#E1E4E8">        attempt </span><span style="color:#F97583">+=</span><span style="color:#79B8FF"> 1</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> short_code</span></span></code></pre>
+<p><strong>Pros:</strong></p>
+<ul>
+<li>Same URL always gets same short code (deduplication)</li>
+<li>No coordination between servers needed</li>
+</ul>
+<p><strong>Cons:</strong></p>
+<ul>
+<li>Collision handling adds complexity</li>
+<li>Extra database checks slow down writes</li>
+</ul>
+<h3 id="approach-2-counter-based-generation">Approach 2: Counter-Based Generation</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> CounterService</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span></span>
+<span class="line"><span style="color:#9ECBFF">    Distributed counter using Redis</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#79B8FF"> __init__</span><span style="color:#E1E4E8">(self, redis_client):</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.redis </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> redis_client</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.counter_key </span><span style="color:#F97583">=</span><span style="color:#9ECBFF"> "url_counter"</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> get_next_id</span><span style="color:#E1E4E8">(self):</span></span>
+<span class="line"><span style="color:#6A737D">        # Atomically increment and get counter</span></span>
+<span class="line"><span style="color:#E1E4E8">        counter </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.redis.incr(</span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">.counter_key)</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> counter</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> generate_short_code_counter</span><span style="color:#E1E4E8">():</span></span>
+<span class="line"><span style="color:#E1E4E8">    counter </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> counter_service.get_next_id()</span></span>
+<span class="line"><span style="color:#E1E4E8">    short_code </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> base62_encode(counter)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Pad to 7 characters</span></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> short_code.rjust(</span><span style="color:#79B8FF">7</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">'0'</span><span style="color:#E1E4E8">)</span></span></code></pre>
+<p><strong>Pros:</strong></p>
+<ul>
+<li>Zero collisions</li>
+<li>Fast generation</li>
+<li>Simple implementation</li>
+</ul>
+<p><strong>Cons:</strong></p>
+<ul>
+<li>Sequential codes (predictable)</li>
+<li>Single point of failure (Redis)</li>
+</ul>
+<p><strong>Solution for SPOF</strong>: Pre-allocate ranges to each server</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> RangeAllocator</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#79B8FF"> __init__</span><span style="color:#E1E4E8">(self, redis_client, range_size</span><span style="color:#F97583">=</span><span style="color:#79B8FF">10000</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.redis </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> redis_client</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.range_size </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> range_size</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.current </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> None</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.max </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> None</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> get_next_id</span><span style="color:#E1E4E8">(self):</span></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.current </span><span style="color:#F97583">is</span><span style="color:#79B8FF"> None</span><span style="color:#F97583"> or</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.current </span><span style="color:#F97583">>=</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.max:</span></span>
+<span class="line"><span style="color:#79B8FF">            self</span><span style="color:#E1E4E8">._allocate_range()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.current </span><span style="color:#F97583">+=</span><span style="color:#79B8FF"> 1</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.current</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> _allocate_range</span><span style="color:#E1E4E8">(self):</span></span>
+<span class="line"><span style="color:#6A737D">        # Atomically allocate a range</span></span>
+<span class="line"><span style="color:#E1E4E8">        start </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.redis.incrby(</span><span style="color:#9ECBFF">"range_counter"</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">.range_size)</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.current </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> start </span><span style="color:#F97583">-</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.range_size</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.max </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> start</span></span></code></pre>
+<p>Each server pre-allocates 10,000 IDs. If server crashes, we lose at most 10,000 IDs (acceptable).</p>
+<h3 id="approach-3-uuid-based-generation">Approach 3: UUID-Based Generation</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> uuid</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> generate_short_code_uuid</span><span style="color:#E1E4E8">():</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span></span>
+<span class="line"><span style="color:#9ECBFF">    Generate short code from UUID</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span></span>
+<span class="line"><span style="color:#6A737D">    # Generate UUID</span></span>
+<span class="line"><span style="color:#E1E4E8">    unique_id </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> uuid.uuid4()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Convert to integer and encode</span></span>
+<span class="line"><span style="color:#E1E4E8">    num </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> unique_id.int</span></span>
+<span class="line"><span style="color:#E1E4E8">    short_code </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> base62_encode(num)[:</span><span style="color:#79B8FF">7</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Check for collision (extremely rare with UUIDs)</span></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#E1E4E8"> exists_in_database(short_code):</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> generate_short_code_uuid()  </span><span style="color:#6A737D"># Regenerate</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> short_code</span></span></code></pre>
+<p><strong>Pros:</strong></p>
+<ul>
+<li>No coordination needed</li>
+<li>Unpredictable codes</li>
+</ul>
+<p><strong>Cons:</strong></p>
+<ul>
+<li>Still need collision checks (rare but possible)</li>
+<li>Slightly slower than counter</li>
+</ul>
+<h3 id="the-right-approach">The Right Approach</h3>
+<p>When reasoning through the trade-offs, <strong>counter-based with range allocation</strong> stands out:</p>
+<ol>
+<li>Fast and collision-free</li>
+<li>Can add randomization to the counter for unpredictability</li>
+<li>Range allocation removes the single point of failure</li>
+</ol>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> generate_short_code</span><span style="color:#E1E4E8">():</span></span>
+<span class="line"><span style="color:#E1E4E8">    counter </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> range_allocator.get_next_id()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Add randomization</span></span>
+<span class="line"><span style="color:#E1E4E8">    randomized </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> (counter </span><span style="color:#F97583">&#x3C;&#x3C;</span><span style="color:#79B8FF"> 8</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">|</span><span style="color:#E1E4E8"> random.randint(</span><span style="color:#79B8FF">0</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">255</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> base62_encode(randomized)[:</span><span style="color:#79B8FF">7</span><span style="color:#E1E4E8">]</span></span></code></pre>
+<h2 id="database-design">Database Design</h2>
+<h3 id="schema">Schema</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="sql"><code><span class="line"><span style="color:#6A737D">-- URLs table</span></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> TABLE</span><span style="color:#B392F0"> urls</span><span style="color:#E1E4E8"> (</span></span>
+<span class="line"><span style="color:#E1E4E8">    id </span><span style="color:#F97583">BIGSERIAL</span><span style="color:#F97583"> PRIMARY KEY</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    short_code </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">10</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">UNIQUE</span><span style="color:#F97583"> NOT NULL</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    long_url </span><span style="color:#F97583">TEXT</span><span style="color:#F97583"> NOT NULL</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    user_id </span><span style="color:#F97583">BIGINT</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    created_at </span><span style="color:#F97583">TIMESTAMP</span><span style="color:#F97583"> DEFAULT</span><span style="color:#F97583"> NOW</span><span style="color:#E1E4E8">(),</span></span>
+<span class="line"><span style="color:#E1E4E8">    expires_at </span><span style="color:#F97583">TIMESTAMP</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    click_count </span><span style="color:#F97583">BIGINT</span><span style="color:#F97583"> DEFAULT</span><span style="color:#79B8FF"> 0</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    is_active </span><span style="color:#F97583">BOOLEAN</span><span style="color:#F97583"> DEFAULT</span><span style="color:#E1E4E8"> TRUE,</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    INDEX</span><span style="color:#E1E4E8"> idx_short_code (short_code),</span></span>
+<span class="line"><span style="color:#F97583">    INDEX</span><span style="color:#E1E4E8"> idx_user_id (user_id),</span></span>
+<span class="line"><span style="color:#F97583">    INDEX</span><span style="color:#E1E4E8"> idx_created_at (created_at)</span></span>
+<span class="line"><span style="color:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">-- Analytics table</span></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> TABLE</span><span style="color:#B392F0"> clicks</span><span style="color:#E1E4E8"> (</span></span>
+<span class="line"><span style="color:#E1E4E8">    id </span><span style="color:#F97583">BIGSERIAL</span><span style="color:#F97583"> PRIMARY KEY</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    short_code </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">10</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">NOT NULL</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    clicked_at </span><span style="color:#F97583">TIMESTAMP</span><span style="color:#F97583"> DEFAULT</span><span style="color:#F97583"> NOW</span><span style="color:#E1E4E8">(),</span></span>
+<span class="line"><span style="color:#E1E4E8">    ip_address </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">45</span><span style="color:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#E1E4E8">    user_agent </span><span style="color:#F97583">TEXT</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    referrer </span><span style="color:#F97583">TEXT</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    country_code </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">2</span><span style="color:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#E1E4E8">    city </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">100</span><span style="color:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#E1E4E8">    device_type </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">20</span><span style="color:#E1E4E8">),</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    INDEX</span><span style="color:#E1E4E8"> idx_short_code (short_code),</span></span>
+<span class="line"><span style="color:#F97583">    INDEX</span><span style="color:#E1E4E8"> idx_clicked_at (clicked_at)</span></span>
+<span class="line"><span style="color:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">-- Users table</span></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> TABLE</span><span style="color:#B392F0"> users</span><span style="color:#E1E4E8"> (</span></span>
+<span class="line"><span style="color:#E1E4E8">    id </span><span style="color:#F97583">BIGSERIAL</span><span style="color:#F97583"> PRIMARY KEY</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    email </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">255</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">UNIQUE</span><span style="color:#F97583"> NOT NULL</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    api_key </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">64</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">UNIQUE</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    tier </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">20</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">DEFAULT</span><span style="color:#9ECBFF"> 'free'</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    created_at </span><span style="color:#F97583">TIMESTAMP</span><span style="color:#F97583"> DEFAULT</span><span style="color:#F97583"> NOW</span><span style="color:#E1E4E8">(),</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    INDEX</span><span style="color:#E1E4E8"> idx_email (email),</span></span>
+<span class="line"><span style="color:#F97583">    INDEX</span><span style="color:#E1E4E8"> idx_api_key (api_key)</span></span>
+<span class="line"><span style="color:#E1E4E8">);</span></span></code></pre>
+<h3 id="database-choice">Database Choice</h3>
+<p><strong>PostgreSQL for URLs table:</strong></p>
+<ul>
+<li>ACID guarantees</li>
+<li>Excellent indexing</li>
+<li>Can handle 10K+ writes/second on good hardware</li>
+<li>Easy to shard when needed</li>
+</ul>
+<p><strong>Time-series database for analytics:</strong></p>
+<ul>
+<li>ClickHouse or TimescaleDB</li>
+<li>Optimized for append-only workloads</li>
+<li>Better compression for historical data</li>
+<li>Fast aggregation queries</li>
+</ul>
+<h3 id="sharding-strategy">Sharding Strategy</h3>
+<p>When a single database can’t handle the load:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> get_shard</span><span style="color:#E1E4E8">(short_code):</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span></span>
+<span class="line"><span style="color:#9ECBFF">    Hash-based sharding</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span></span>
+<span class="line"><span style="color:#E1E4E8">    shard_count </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 16</span></span>
+<span class="line"><span style="color:#E1E4E8">    shard_id </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> hash</span><span style="color:#E1E4E8">(short_code) </span><span style="color:#F97583">%</span><span style="color:#E1E4E8"> shard_count</span></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#F97583"> f</span><span style="color:#9ECBFF">"shard_</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">shard_id</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">"</span></span></code></pre>
+<p>This distributes URLs evenly across shards.</p>
+<h2 id="system-architecture">System Architecture</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>                        Users</span></span>
+<span class="line"><span>                          |</span></span>
+<span class="line"><span>                          ▼</span></span>
+<span class="line"><span>                   ┌─────────────┐</span></span>
+<span class="line"><span>                   │     CDN     │</span></span>
+<span class="line"><span>                   │ (CloudFlare)│</span></span>
+<span class="line"><span>                   └──────┬──────┘</span></span>
+<span class="line"><span>                          │</span></span>
+<span class="line"><span>                          ▼</span></span>
+<span class="line"><span>                  ┌───────────────┐</span></span>
+<span class="line"><span>                  │ Load Balancer │</span></span>
+<span class="line"><span>                  └───────┬───────┘</span></span>
+<span class="line"><span>                          │</span></span>
+<span class="line"><span>              ┌───────────┼───────────┐</span></span>
+<span class="line"><span>              │           │           │</span></span>
+<span class="line"><span>         ┌────▼────┐ ┌────▼────┐ ┌────▼────┐</span></span>
+<span class="line"><span>         │   App   │ │   App   │ │   App   │</span></span>
+<span class="line"><span>         │ Server  │ │ Server  │ │ Server  │</span></span>
+<span class="line"><span>         └────┬────┘ └────┬────┘ └────┬────┘</span></span>
+<span class="line"><span>              │           │           │</span></span>
+<span class="line"><span>              └───────────┼───────────┘</span></span>
+<span class="line"><span>                          │</span></span>
+<span class="line"><span>          ┌───────────────┼───────────────┐</span></span>
+<span class="line"><span>          │               │               │</span></span>
+<span class="line"><span>     ┌────▼────┐   ┌──────▼──────┐  ┌────▼─────┐</span></span>
+<span class="line"><span>     │  Redis  │   │  PostgreSQL │  │  Kafka   │</span></span>
+<span class="line"><span>     │  Cache  │   │   Cluster   │  │  Queue   │</span></span>
+<span class="line"><span>     └─────────┘   └─────────────┘  └──────────┘</span></span>
+<span class="line"><span>                                          │</span></span>
+<span class="line"><span>                                     ┌────▼────┐</span></span>
+<span class="line"><span>                                     │Analytics│</span></span>
+<span class="line"><span>                                     │ Workers │</span></span>
+<span class="line"><span>                                     └─────────┘</span></span></code></pre>
+<h3 id="request-flow">Request Flow</h3>
+<p><strong>URL Creation:</strong></p>
+<ol>
+<li>Client sends POST /api/urls with long URL</li>
+<li>App server generates short code</li>
+<li>Check if short code exists in Redis cache</li>
+<li>If not in cache, check database</li>
+<li>Insert into database</li>
+<li>Cache in Redis with 24-hour TTL</li>
+<li>Return short code to client</li>
+</ol>
+<p><strong>URL Redirection:</strong></p>
+<ol>
+<li>Client accesses short URL (GET /:shortCode)</li>
+<li>Check Redis cache first</li>
+<li>If cache hit:
+<ul>
+<li>Immediately redirect (302)</li>
+<li>Fire analytics event to Kafka asynchronously</li>
+</ul>
+</li>
+<li>If cache miss:
+<ul>
+<li>Query database</li>
+<li>Cache result in Redis</li>
+<li>Redirect and fire analytics event</li>
+</ul>
+</li>
+<li>Analytics workers consume Kafka events and batch write to analytics DB</li>
+</ol>
+<h2 id="caching-strategy">Caching Strategy</h2>
+<h3 id="redis-cache-configuration">Redis Cache Configuration</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#6A737D"># Cache configuration</span></span>
+<span class="line"><span style="color:#79B8FF">CACHE_TTL</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> 86400</span><span style="color:#6A737D">  # 24 hours</span></span>
+<span class="line"><span style="color:#79B8FF">CACHE_SIZE</span><span style="color:#F97583"> =</span><span style="color:#9ECBFF"> "100GB"</span><span style="color:#6A737D">  # Can hold ~150M URLs</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Cache structure</span></span>
+<span class="line"><span style="color:#E1E4E8">cache_key </span><span style="color:#F97583">=</span><span style="color:#F97583"> f</span><span style="color:#9ECBFF">"url:</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">short_code</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">"</span></span>
+<span class="line"><span style="color:#E1E4E8">cache_value </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#9ECBFF">    'long_url'</span><span style="color:#E1E4E8">: </span><span style="color:#9ECBFF">'https://example.com/...'</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">    'expires_at'</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">1735689600</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#9ECBFF">    'user_id'</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">12345</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span></code></pre>
+<h3 id="cache-eviction">Cache Eviction</h3>
+<p>Use LRU (Least Recently Used):</p>
+<ul>
+<li>Hot URLs stay in cache</li>
+<li>Cold URLs get evicted automatically</li>
+<li>Cache hit rate: 85-90%</li>
+</ul>
+<h3 id="cache-warming">Cache Warming</h3>
+<p>Pre-populate cache with trending URLs:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> warm_cache</span><span style="color:#E1E4E8">():</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span></span>
+<span class="line"><span style="color:#9ECBFF">    Cache top URLs from last 24 hours</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span></span>
+<span class="line"><span style="color:#E1E4E8">    top_urls </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> db.query(</span><span style="color:#9ECBFF">"""</span></span>
+<span class="line"><span style="color:#9ECBFF">        SELECT short_code, long_url, COUNT(*) as clicks</span></span>
+<span class="line"><span style="color:#9ECBFF">        FROM clicks</span></span>
+<span class="line"><span style="color:#9ECBFF">        WHERE clicked_at > NOW() - INTERVAL '24 hours'</span></span>
+<span class="line"><span style="color:#9ECBFF">        GROUP BY short_code, long_url</span></span>
+<span class="line"><span style="color:#9ECBFF">        ORDER BY clicks DESC</span></span>
+<span class="line"><span style="color:#9ECBFF">        LIMIT 100000</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    for</span><span style="color:#E1E4E8"> url </span><span style="color:#F97583">in</span><span style="color:#E1E4E8"> top_urls:</span></span>
+<span class="line"><span style="color:#E1E4E8">        redis.setex(</span></span>
+<span class="line"><span style="color:#F97583">            f</span><span style="color:#9ECBFF">"url:</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">url.short_code</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">            CACHE_TTL</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">            url.long_url</span></span>
+<span class="line"><span style="color:#E1E4E8">        )</span></span></code></pre>
+<h2 id="analytics-pipeline">Analytics Pipeline</h2>
+<h3 id="asynchronous-processing">Asynchronous Processing</h3>
+<p>Never block redirects for analytics:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">async</span><span style="color:#F97583"> def</span><span style="color:#B392F0"> handle_redirect</span><span style="color:#E1E4E8">(short_code):</span></span>
+<span class="line"><span style="color:#6A737D">    # Get URL from cache/DB</span></span>
+<span class="line"><span style="color:#E1E4E8">    long_url </span><span style="color:#F97583">=</span><span style="color:#F97583"> await</span><span style="color:#E1E4E8"> get_url(short_code)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#F97583"> not</span><span style="color:#E1E4E8"> long_url:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> HTTP_404</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Fire analytics event (non-blocking)</span></span>
+<span class="line"><span style="color:#E1E4E8">    asyncio.create_task(track_click(short_code, request))</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Immediately redirect</span></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> redirect(long_url, </span><span style="color:#FFAB70">status_code</span><span style="color:#F97583">=</span><span style="color:#79B8FF">302</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">async</span><span style="color:#F97583"> def</span><span style="color:#B392F0"> track_click</span><span style="color:#E1E4E8">(short_code, request):</span></span>
+<span class="line"><span style="color:#E1E4E8">    event </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#9ECBFF">        'short_code'</span><span style="color:#E1E4E8">: short_code,</span></span>
+<span class="line"><span style="color:#9ECBFF">        'timestamp'</span><span style="color:#E1E4E8">: time.time(),</span></span>
+<span class="line"><span style="color:#9ECBFF">        'ip'</span><span style="color:#E1E4E8">: request.client.host,</span></span>
+<span class="line"><span style="color:#9ECBFF">        'user_agent'</span><span style="color:#E1E4E8">: request.headers.get(</span><span style="color:#9ECBFF">'user-agent'</span><span style="color:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#9ECBFF">        'referrer'</span><span style="color:#E1E4E8">: request.headers.get(</span><span style="color:#9ECBFF">'referer'</span><span style="color:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#E1E4E8">    }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Send to Kafka</span></span>
+<span class="line"><span style="color:#F97583">    await</span><span style="color:#E1E4E8"> kafka_producer.send(</span><span style="color:#9ECBFF">'clicks'</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">value</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">event)</span></span></code></pre>
+<h3 id="batch-processing">Batch Processing</h3>
+<p>Analytics workers batch write to database:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> AnalyticsWorker</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#79B8FF"> __init__</span><span style="color:#E1E4E8">(self, batch_size</span><span style="color:#F97583">=</span><span style="color:#79B8FF">1000</span><span style="color:#E1E4E8">, flush_interval</span><span style="color:#F97583">=</span><span style="color:#79B8FF">5</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.batch </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> []</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.batch_size </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> batch_size</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.flush_interval </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> flush_interval</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    async</span><span style="color:#F97583"> def</span><span style="color:#B392F0"> process_events</span><span style="color:#E1E4E8">(self):</span></span>
+<span class="line"><span style="color:#F97583">        async</span><span style="color:#F97583"> for</span><span style="color:#E1E4E8"> event </span><span style="color:#F97583">in</span><span style="color:#E1E4E8"> kafka_consumer:</span></span>
+<span class="line"><span style="color:#79B8FF">            self</span><span style="color:#E1E4E8">.batch.append(event)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">            if</span><span style="color:#79B8FF"> len</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">.batch) </span><span style="color:#F97583">>=</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.batch_size:</span></span>
+<span class="line"><span style="color:#F97583">                await</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.flush()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    async</span><span style="color:#F97583"> def</span><span style="color:#B392F0"> flush</span><span style="color:#E1E4E8">(self):</span></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#F97583"> not</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.batch:</span></span>
+<span class="line"><span style="color:#F97583">            return</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">        # Batch insert</span></span>
+<span class="line"><span style="color:#F97583">        await</span><span style="color:#E1E4E8"> db.execute_many(</span></span>
+<span class="line"><span style="color:#9ECBFF">            "INSERT INTO clicks VALUES (...)"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#79B8FF">            self</span><span style="color:#E1E4E8">.batch</span></span>
+<span class="line"><span style="color:#E1E4E8">        )</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.batch </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> []</span></span></code></pre>
+<p>This reduces database load by 1000x.</p>
+<h2 id="advanced-features">Advanced Features</h2>
+<h3 id="custom-domains">Custom Domains</h3>
+<p>Allow users to use their own domains:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#6A737D"># Domain mapping table</span></span>
+<span class="line"><span style="color:#79B8FF">CREATE</span><span style="color:#79B8FF"> TABLE</span><span style="color:#E1E4E8"> custom_domains (</span></span>
+<span class="line"><span style="color:#E1E4E8">    domain VARCHAR(</span><span style="color:#79B8FF">255</span><span style="color:#E1E4E8">) </span><span style="color:#79B8FF">PRIMARY</span><span style="color:#79B8FF"> KEY</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    user_id </span><span style="color:#79B8FF">BIGINT</span><span style="color:#79B8FF"> NOT</span><span style="color:#79B8FF"> NULL</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    verified </span><span style="color:#79B8FF">BOOLEAN</span><span style="color:#79B8FF"> DEFAULT</span><span style="color:#79B8FF"> FALSE</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    created_at </span><span style="color:#79B8FF">TIMESTAMP</span><span style="color:#79B8FF"> DEFAULT</span><span style="color:#E1E4E8"> NOW()</span></span>
+<span class="line"><span style="color:#E1E4E8">)</span><span style="color:#FDAEB7;font-style:italic">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> get_url_by_domain</span><span style="color:#E1E4E8">(domain, short_code):</span></span>
+<span class="line"><span style="color:#6A737D">    # Check custom domain</span></span>
+<span class="line"><span style="color:#E1E4E8">    custom </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> db.query(</span><span style="color:#9ECBFF">"""</span></span>
+<span class="line"><span style="color:#9ECBFF">        SELECT u.long_url</span></span>
+<span class="line"><span style="color:#9ECBFF">        FROM urls u</span></span>
+<span class="line"><span style="color:#9ECBFF">        JOIN custom_domains d ON u.user_id = d.user_id</span></span>
+<span class="line"><span style="color:#9ECBFF">        WHERE d.domain = </span><span style="color:#79B8FF">%s</span><span style="color:#9ECBFF"> AND u.short_code = </span><span style="color:#79B8FF">%s</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span><span style="color:#E1E4E8">, domain, short_code)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> custom.long_url </span><span style="color:#F97583">if</span><span style="color:#E1E4E8"> custom </span><span style="color:#F97583">else</span><span style="color:#79B8FF"> None</span></span></code></pre>
+<h3 id="link-expiration">Link Expiration</h3>
+<p>Automatically expire old links:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#6A737D"># Cron job runs every hour</span></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> expire_old_urls</span><span style="color:#E1E4E8">():</span></span>
+<span class="line"><span style="color:#E1E4E8">    db.execute(</span><span style="color:#9ECBFF">"""</span></span>
+<span class="line"><span style="color:#9ECBFF">        UPDATE urls</span></span>
+<span class="line"><span style="color:#9ECBFF">        SET is_active = FALSE</span></span>
+<span class="line"><span style="color:#9ECBFF">        WHERE expires_at &#x3C; NOW()</span></span>
+<span class="line"><span style="color:#9ECBFF">        AND is_active = TRUE</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Clear from cache</span></span>
+<span class="line"><span style="color:#E1E4E8">    expired </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> db.query(</span><span style="color:#9ECBFF">"""</span></span>
+<span class="line"><span style="color:#9ECBFF">        SELECT short_code</span></span>
+<span class="line"><span style="color:#9ECBFF">        FROM urls</span></span>
+<span class="line"><span style="color:#9ECBFF">        WHERE expires_at &#x3C; NOW()</span></span>
+<span class="line"><span style="color:#9ECBFF">        AND is_active = TRUE</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    for</span><span style="color:#E1E4E8"> url </span><span style="color:#F97583">in</span><span style="color:#E1E4E8"> expired:</span></span>
+<span class="line"><span style="color:#E1E4E8">        redis.delete(</span><span style="color:#F97583">f</span><span style="color:#9ECBFF">"url:</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">url.short_code</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">"</span><span style="color:#E1E4E8">)</span></span></code></pre>
+<h3 id="qr-code-generation">QR Code Generation</h3>
+<p>Generate QR codes for short URLs:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> qrcode</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> generate_qr_code</span><span style="color:#E1E4E8">(short_url):</span></span>
+<span class="line"><span style="color:#E1E4E8">    qr </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> qrcode.QRCode(</span><span style="color:#FFAB70">version</span><span style="color:#F97583">=</span><span style="color:#79B8FF">1</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">box_size</span><span style="color:#F97583">=</span><span style="color:#79B8FF">10</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">border</span><span style="color:#F97583">=</span><span style="color:#79B8FF">5</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">    qr.add_data(short_url)</span></span>
+<span class="line"><span style="color:#E1E4E8">    qr.make(</span><span style="color:#FFAB70">fit</span><span style="color:#F97583">=</span><span style="color:#79B8FF">True</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    img </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> qr.make_image(</span><span style="color:#FFAB70">fill_color</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"black"</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">back_color</span><span style="color:#F97583">=</span><span style="color:#9ECBFF">"white"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> img</span></span></code></pre>
+<h2 id="security-considerations">Security Considerations</h2>
+<h3 id="prevent-abuse">Prevent Abuse</h3>
+<ol>
+<li><strong>Rate limiting</strong>: Limit URL creation per IP/user</li>
+<li><strong>URL validation</strong>: Block malicious URLs (phishing, malware)</li>
+<li><strong>Custom alias restrictions</strong>: Reserve keywords, prevent profanity</li>
+<li><strong>Link scanning</strong>: Integrate with Google Safe Browsing API</li>
+</ol>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#79B8FF">RESERVED_CODES</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> {</span><span style="color:#9ECBFF">'admin'</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">'api'</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">'www'</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">'app'</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">'help'</span><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> is_valid_custom_alias</span><span style="color:#E1E4E8">(alias):</span></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#E1E4E8"> alias </span><span style="color:#F97583">in</span><span style="color:#79B8FF"> RESERVED_CODES</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> False</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#79B8FF"> len</span><span style="color:#E1E4E8">(alias) </span><span style="color:#F97583">&#x3C;</span><span style="color:#79B8FF"> 4</span><span style="color:#F97583"> or</span><span style="color:#79B8FF"> len</span><span style="color:#E1E4E8">(alias) </span><span style="color:#F97583">></span><span style="color:#79B8FF"> 20</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> False</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#F97583"> not</span><span style="color:#E1E4E8"> re.match(</span><span style="color:#F97583">r</span><span style="color:#9ECBFF">'</span><span style="color:#79B8FF">^[a-zA-Z0-9-_]</span><span style="color:#F97583">+</span><span style="color:#79B8FF">$</span><span style="color:#9ECBFF">'</span><span style="color:#E1E4E8">, alias):</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> False</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#79B8FF"> True</span></span></code></pre>
+<h3 id="url-validation">URL Validation</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> requests</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> is_safe_url</span><span style="color:#E1E4E8">(url):</span></span>
+<span class="line"><span style="color:#6A737D">    # Check against Google Safe Browsing</span></span>
+<span class="line"><span style="color:#E1E4E8">    response </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> requests.post(</span></span>
+<span class="line"><span style="color:#9ECBFF">        'https://safebrowsing.googleapis.com/v4/threatMatches:find'</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#FFAB70">        params</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">{</span><span style="color:#9ECBFF">'key'</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">GOOGLE_API_KEY</span><span style="color:#E1E4E8">},</span></span>
+<span class="line"><span style="color:#FFAB70">        json</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">{</span></span>
+<span class="line"><span style="color:#9ECBFF">            'threatInfo'</span><span style="color:#E1E4E8">: {</span></span>
+<span class="line"><span style="color:#9ECBFF">                'threatTypes'</span><span style="color:#E1E4E8">: [</span><span style="color:#9ECBFF">'MALWARE'</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">'SOCIAL_ENGINEERING'</span><span style="color:#E1E4E8">],</span></span>
+<span class="line"><span style="color:#9ECBFF">                'platformTypes'</span><span style="color:#E1E4E8">: [</span><span style="color:#9ECBFF">'ANY_PLATFORM'</span><span style="color:#E1E4E8">],</span></span>
+<span class="line"><span style="color:#9ECBFF">                'threatEntries'</span><span style="color:#E1E4E8">: [{</span><span style="color:#9ECBFF">'url'</span><span style="color:#E1E4E8">: url}]</span></span>
+<span class="line"><span style="color:#E1E4E8">            }</span></span>
+<span class="line"><span style="color:#E1E4E8">        }</span></span>
+<span class="line"><span style="color:#E1E4E8">    )</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#79B8FF"> len</span><span style="color:#E1E4E8">(response.json().get(</span><span style="color:#9ECBFF">'matches'</span><span style="color:#E1E4E8">, [])) </span><span style="color:#F97583">==</span><span style="color:#79B8FF"> 0</span></span></code></pre>
+<h2 id="monitoring">Monitoring</h2>
+<p>Key metrics to track:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#6A737D"># Performance metrics</span></span>
+<span class="line"><span style="color:#F97583">-</span><span style="color:#E1E4E8"> redirect_latency_p50, p95, p99</span></span>
+<span class="line"><span style="color:#F97583">-</span><span style="color:#E1E4E8"> url_creation_latency</span></span>
+<span class="line"><span style="color:#F97583">-</span><span style="color:#E1E4E8"> cache_hit_rate</span></span>
+<span class="line"><span style="color:#F97583">-</span><span style="color:#E1E4E8"> database_query_time</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Business metrics</span></span>
+<span class="line"><span style="color:#F97583">-</span><span style="color:#E1E4E8"> urls_created_per_minute</span></span>
+<span class="line"><span style="color:#F97583">-</span><span style="color:#E1E4E8"> redirects_per_minute</span></span>
+<span class="line"><span style="color:#F97583">-</span><span style="color:#E1E4E8"> top_referrers</span></span>
+<span class="line"><span style="color:#F97583">-</span><span style="color:#E1E4E8"> geographic_distribution</span></span>
+<span class="line"><span style="color:#F97583">-</span><span style="color:#E1E4E8"> device_breakdown</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># System health</span></span>
+<span class="line"><span style="color:#F97583">-</span><span style="color:#E1E4E8"> redis_memory_usage</span></span>
+<span class="line"><span style="color:#F97583">-</span><span style="color:#E1E4E8"> database_connection_pool</span></span>
+<span class="line"><span style="color:#F97583">-</span><span style="color:#E1E4E8"> kafka_lag</span></span>
+<span class="line"><span style="color:#F97583">-</span><span style="color:#E1E4E8"> error_rate_4xx, </span><span style="color:#FDAEB7;font-style:italic">5xx</span></span></code></pre>
+<h2 id="key-design-principles">Key Design Principles</h2>
+<ol>
+<li><strong>Cache everything</strong>: 90% of traffic hits 10% of URLs</li>
+<li><strong>Fail open</strong>: If analytics fails, don’t block redirects</li>
+<li><strong>Pre-allocate IDs</strong>: Avoid single point of failure</li>
+<li><strong>Use CDN</strong>: Reduce latency globally with edge caching</li>
+<li><strong>Batch writes</strong>: Analytics can be eventual consistent</li>
+<li><strong>Monitor abuse</strong>: Bad actors will try to exploit your service</li>
+<li><strong>Plan for scale</strong>: Database sharding is easier to plan upfront</li>
+</ol>
+<h2 id="conclusion">Conclusion</h2>
+<p>Building a URL shortener that handles real scale involves more than generating short codes. The challenge is handling massive read traffic, maintaining low latency globally, and tracking analytics without slowing down the critical redirect path.</p>
+<p>This architecture is designed to handle billions of URLs and tens of thousands of requests per second. Start simple with a single database and Redis cache, then scale horizontally as traffic grows.</p>
+<p>Reach out on <a href="https://twitter.com/anudeepsamaiya">Twitter</a> or <a href="https://www.linkedin.com/in/anudeepsamaiya/">LinkedIn</a> if you want to discuss URL shortener implementations or system design patterns.</p> </div> <!-- Social Share Buttons --> <div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-800"> <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Share this post:</p> <div class="flex gap-3"> <a href="https://twitter.com/intent/tweet?text=Building%20a%20URL%20Shortener%20That%20Scales&url=https%3A%2F%2Fanudeepsamaiya.github.io%2Fblog%2F2024-06-23-building-a-url-shortener%2F" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors" aria-label="Share on Twitter"> <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"> <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path> </svg>
+Twitter
+</a> <a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fanudeepsamaiya.github.io%2Fblog%2F2024-06-23-building-a-url-shortener%2F" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg transition-colors" aria-label="Share on LinkedIn"> <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"> <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"></path> </svg>
+LinkedIn
+</a> <a href="https://news.ycombinator.com/submitlink?u=https%3A%2F%2Fanudeepsamaiya.github.io%2Fblog%2F2024-06-23-building-a-url-shortener%2F&t=Building%20a%20URL%20Shortener%20That%20Scales" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors" aria-label="Share on Hacker News"> <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"> <path d="M0 24V0h24v24H0zM6.951 5.896l4.112 7.708v5.064h1.583v-4.972l4.148-7.799h-1.749l-2.457 4.875c-.372.745-.688 1.434-.688 1.434s-.297-.708-.651-1.434L8.831 5.896h-1.88z"></path> </svg>
+HN
+</a> </div> </div> <!-- Tags at bottom --> <div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-800"> <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Tags:</p> <div class="flex flex-wrap gap-2"> <span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#system-design </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#url-shortener </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#distributed-systems </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#backend </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#architecture </span> </div> </div> <section class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800"><h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+Related Posts
+</h2><div class="space-y-4"><a href="/blog/2025-03-05-url-shortener-system-design-part1-hld" class="block p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">URL Shortener System Design (Part 1): High-Level Architecture</h3><p class="text-gray-600 dark:text-gray-400 text-sm mb-2">Master the fundamentals of designing a production URL shortener: requirements, capacity planning, distributed ID generation, database design, and caching strategies for system design interviews.</p><div class="flex gap-2 flex-wrap"><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">system-design</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">url-shortener</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">distributed-systems</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">backend</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">architecture</span></div></a><a href="/blog/2025-07-16-url-shortener-system-design-part2-lld" class="block p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">URL Shortener System Design (Part 2): Production Implementation Deep Dive</h3><p class="text-gray-600 dark:text-gray-400 text-sm mb-2">From architecture to code: implement production-grade analytics pipelines, security layers, and observability for URL shorteners. Complete with Kafka streaming, rate limiting, and monitoring.</p><div class="flex gap-2 flex-wrap"><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">system-design</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">url-shortener</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">distributed-systems</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">backend</span></div></a><a href="/blog/2023-05-12-system-design-interview-framework" class="block p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">How I Approach System Design Interviews: A Framework That Actually Works</h3><p class="text-gray-600 dark:text-gray-400 text-sm mb-2">The framework I use to tackle system design interviews, demonstrated through designing a URL shortener from requirements to scaling strategies.</p><div class="flex gap-2 flex-wrap"><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">system-design</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">architecture</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">backend</span></div></a></div></section> <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800"> <a href="/blog" class="text-blue-600 dark:text-blue-400 hover:underline">
+← Back to all posts
+</a> </div> </article> <div class="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 py-8 mt-12"> <div class="max-w-4xl mx-auto px-4"> <div class="text-center mb-6"> <h2 class="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Let's Connect! 💬</h2> <p class="text-base text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
+Whether you're looking to hire, want to collaborate on a project, or just want to chat about tech—I'd love to hear from you!
+</p> </div> <div class="flex flex-col sm:flex-row items-center justify-center gap-6"> <astro-island uid="ZC9c4W" prefix="r1" component-url="/_astro/ContactForm.DeBm0i4w.js" component-export="default" renderer-url="/_astro/client.AE0akZX9.js" props="{}" ssr client="load" opts="{&quot;name&quot;:&quot;ContactForm&quot;,&quot;value&quot;:true}"></astro-island> <div class="flex items-center gap-4"> <div class="h-8 w-px bg-gray-300 dark:bg-gray-700 hidden sm:block"></div> <p class="text-gray-600 dark:text-gray-400 text-sm hidden sm:block">or find me on</p> </div> <div class="flex gap-4"> <a href="https://github.com/anudeepsamaiya" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="GitHub"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/github.svg" alt="GitHub" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://twitter.com/anudeepsamaiya" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="X (Twitter)"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/x.svg" alt="X (Twitter)" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://www.linkedin.com/in/anudeepsamaiya/" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="LinkedIn"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/linkedin.svg" alt="LinkedIn" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://stackoverflow.com/users/2079692/anudeep-samaiya" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="Stack Overflow"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/stackoverflow.svg" alt="Stack Overflow" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://leetcode.com/anudeepsamaiya/" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="LeetCode"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/leetcode.svg" alt="LeetCode" class="w-6 h-6 opacity-60 dark:invert"> </a> </div> </div> </div> </div>  </main> <footer class="py-6 px-4 border-t border-gray-200 dark:border-gray-800"> <div class="max-w-4xl mx-auto text-center text-gray-600 dark:text-gray-400 text-sm"> <p class="mb-2"> © 2018-2026 Anudeep Samaiya. All rights reserved. </p> <p>
+Code:
+<a href="https://github.com/anudeepsamaiya/anudeepsamaiya.github.io/blob/master/LICENSE" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline mx-1">
+MIT License
+</a>
+| Content:
+<a href="https://github.com/anudeepsamaiya/anudeepsamaiya.github.io/blob/master/LICENSE-CONTENT" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline mx-1">
+CC BY 4.0
+</a> </p> </div> </footer> </div> </body></html> 
