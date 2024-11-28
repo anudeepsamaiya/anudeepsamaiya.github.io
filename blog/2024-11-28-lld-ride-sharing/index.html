@@ -1,0 +1,353 @@
+<!DOCTYPE html><html lang="en-US"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description" content="A low-level design walkthrough of a ride sharing service covering trip state machines, matching strategies, pricing, and real-time observer notifications for drivers and riders."><meta name="author" content="Anudeep Samaiya"><meta name="google-site-verification" content="twVFs_dUxCyldlt-Sif72GezMsXbI0wKJEVTBJ1A22g"><link rel="canonical" href="https://anudeepsamaiya.github.io/blog/2024-11-28-lld-ride-sharing/"><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/site.webmanifest"><title>Design a Ride Sharing Service: Matching, Routing, and Real-Time State | Anudeep Samaiya</title><script>
+      // Initialize theme before page renders to prevent flash
+      (function() {
+        const theme = localStorage.getItem('theme') || 'light';
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script><link rel="stylesheet" href="/_astro/about.Cg2y2hoq.css">
+<style>.prose pre{overflow-x:auto}.prose pre:has(code:contains("┌")),.prose pre:has(code:contains("│")),.prose pre:has(code:contains("▶")),.prose pre:has(code:contains("└")){text-align:center;display:flex;justify-content:center}
+</style></head> <body class="bg-white dark:bg-gray-900"> <div class="min-h-screen flex flex-col"> <header class="py-6 px-4 border-b border-gray-200 dark:border-gray-800"> <nav class="max-w-4xl mx-auto flex justify-between items-center"> <a href="/" class="text-2xl font-bold text-gray-900 dark:text-white"> Anudeep Samaiya </a> <div class="flex items-center gap-6"> <ul class="flex gap-6"> <li> <a href="/about" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"> About </a> </li><li> <a href="/blog" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"> Blog </a> </li><li> <a href="/reading" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"> Reading </a> </li> </ul> <style>astro-island,astro-slot,astro-static-slot{display:contents}</style><script>(()=>{var e=async t=>{await(await t())()};(self.Astro||(self.Astro={})).load=e;window.dispatchEvent(new Event("astro:load"));})();</script><script>(()=>{var A=Object.defineProperty;var g=(i,o,a)=>o in i?A(i,o,{enumerable:!0,configurable:!0,writable:!0,value:a}):i[o]=a;var d=(i,o,a)=>g(i,typeof o!="symbol"?o+"":o,a);{let i={0:t=>m(t),1:t=>a(t),2:t=>new RegExp(t),3:t=>new Date(t),4:t=>new Map(a(t)),5:t=>new Set(a(t)),6:t=>BigInt(t),7:t=>new URL(t),8:t=>new Uint8Array(t),9:t=>new Uint16Array(t),10:t=>new Uint32Array(t),11:t=>1/0*t},o=t=>{let[l,e]=t;return l in i?i[l](e):void 0},a=t=>t.map(o),m=t=>typeof t!="object"||t===null?t:Object.fromEntries(Object.entries(t).map(([l,e])=>[l,o(e)]));class y extends HTMLElement{constructor(){super(...arguments);d(this,"Component");d(this,"hydrator");d(this,"hydrate",async()=>{var b;if(!this.hydrator||!this.isConnected)return;let e=(b=this.parentElement)==null?void 0:b.closest("astro-island[ssr]");if(e){e.addEventListener("astro:hydrate",this.hydrate,{once:!0});return}let c=this.querySelectorAll("astro-slot"),n={},h=this.querySelectorAll("template[data-astro-template]");for(let r of h){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("data-astro-template")||"default"]=r.innerHTML,r.remove())}for(let r of c){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("name")||"default"]=r.innerHTML)}let p;try{p=this.hasAttribute("props")?m(JSON.parse(this.getAttribute("props"))):{}}catch(r){let s=this.getAttribute("component-url")||"<unknown>",v=this.getAttribute("component-export");throw v&&(s+=` (export ${v})`),console.error(`[hydrate] Error parsing props for component ${s}`,this.getAttribute("props"),r),r}let u;await this.hydrator(this)(this.Component,p,n,{client:this.getAttribute("client")}),this.removeAttribute("ssr"),this.dispatchEvent(new CustomEvent("astro:hydrate"))});d(this,"unmount",()=>{this.isConnected||this.dispatchEvent(new CustomEvent("astro:unmount"))})}disconnectedCallback(){document.removeEventListener("astro:after-swap",this.unmount),document.addEventListener("astro:after-swap",this.unmount,{once:!0})}connectedCallback(){if(!this.hasAttribute("await-children")||document.readyState==="interactive"||document.readyState==="complete")this.childrenConnectedCallback();else{let e=()=>{document.removeEventListener("DOMContentLoaded",e),c.disconnect(),this.childrenConnectedCallback()},c=new MutationObserver(()=>{var n;((n=this.lastChild)==null?void 0:n.nodeType)===Node.COMMENT_NODE&&this.lastChild.nodeValue==="astro:end"&&(this.lastChild.remove(),e())});c.observe(this,{childList:!0}),document.addEventListener("DOMContentLoaded",e)}}async childrenConnectedCallback(){let e=this.getAttribute("before-hydration-url");e&&await import(e),this.start()}async start(){let e=JSON.parse(this.getAttribute("opts")),c=this.getAttribute("client");if(Astro[c]===void 0){window.addEventListener(`astro:${c}`,()=>this.start(),{once:!0});return}try{await Astro[c](async()=>{let n=this.getAttribute("renderer-url"),[h,{default:p}]=await Promise.all([import(this.getAttribute("component-url")),n?import(n):()=>()=>{}]),u=this.getAttribute("component-export")||"default";if(!u.includes("."))this.Component=h[u];else{this.Component=h;for(let f of u.split("."))this.Component=this.Component[f]}return this.hydrator=p,this.hydrate},e,this)}catch(n){console.error(`[astro-island] Error hydrating ${this.getAttribute("component-url")}`,n)}}attributeChangedCallback(){this.hydrate()}}d(y,"observedAttributes",["props"]),customElements.get("astro-island")||customElements.define("astro-island",y)}})();</script><astro-island uid="Z1WQ4OE" prefix="r0" component-url="/_astro/ThemeToggle.C_FMJT46.js" component-export="default" renderer-url="/_astro/client.AE0akZX9.js" props="{}" ssr client="load" opts="{&quot;name&quot;:&quot;ThemeToggle&quot;,&quot;value&quot;:true}" await-children><div class="w-9 h-9 p-2 rounded-lg bg-gray-100 dark:bg-gray-800"><div class="w-5 h-5"></div></div><!--astro:end--></astro-island> </div> </nav> </header> <main class="flex-1">  <article class="max-w-4xl mx-auto px-4 py-12"> <header class="mb-8"> <h1 class="text-4xl font-bold mb-4 text-gray-900 dark:text-white"> Design a Ride Sharing Service: Matching, Routing, and Real-Time State </h1> <div class="flex items-center gap-4 text-gray-600 dark:text-gray-400"> <time> November 28, 2024 </time> </div> </header> <div class="prose prose-lg dark:prose-invert max-w-none mb-12"> <p>Most ride-sharing LLD walkthroughs jump straight to the matching algorithm and call it done. That misses the harder design problems. Matching is one decision you make at the start of a trip. What’s more interesting is everything after that decision: how do you track the trip’s lifecycle through six distinct states without turning your code into a maze of booleans and if-else chains? How do you keep the driver and rider notified of each transition without coupling the trip logic to the notification mechanism?</p>
+<p>When I reason through this problem, I find three largely independent design challenges: a state machine for the trip lifecycle, a strategy for matching, and an observer mechanism for real-time updates. Getting the boundaries between these three right is most of the work.</p>
+<h2 id="requirements">Requirements</h2>
+<p><strong>Functional:</strong></p>
+<ul>
+<li>Riders request a trip with a pickup and destination location</li>
+<li>The system matches the rider to an available driver using a configurable strategy (nearest, cheapest, fastest)</li>
+<li>The trip progresses through states: REQUESTED, ACCEPTED, DRIVER_ARRIVED, IN_PROGRESS, COMPLETED, CANCELLED</li>
+<li>Both driver and rider receive notifications on state transitions</li>
+<li>Price is calculated at completion using a configurable pricing strategy</li>
+</ul>
+<p><strong>Non-functional:</strong></p>
+<ul>
+<li>State transitions must be validated so invalid transitions (e.g. skipping DRIVER_ARRIVED) raise an error</li>
+<li>Swapping the matching algorithm or pricing model should not require changing the trip or driver classes</li>
+<li>The notification mechanism should not couple the trip logic to any specific delivery channel</li>
+</ul>
+<h2 id="core-entities">Core Entities</h2>
+<p><strong><code>Location</code></strong> is a simple value object holding latitude and longitude. It knows how to compute the Euclidean distance to another location. Nothing else.</p>
+<p><strong><code>Driver</code></strong> carries a current location, a name, and an availability flag. It does not own trips. It does not calculate anything. It changes its location and availability and nothing else.</p>
+<p><strong><code>Rider</code></strong> is similarly minimal: a name and a current location.</p>
+<p><strong><code>RideRequest</code></strong> is the signal a rider sends into the system. It holds the rider, the pickup location, and the destination.</p>
+<p><strong><code>Trip</code></strong> is the central object. It owns the current state, the driver, the rider, the matched fare at completion, and the observer list. It exposes one method per state transition and validates that the transition is legal.</p>
+<p><strong><code>TripState</code></strong> is an enum with all six states. An <code>ALLOWED_TRANSITIONS</code> map on the <code>Trip</code> class encodes which transitions are valid, so the validation logic is data-driven rather than buried in conditionals.</p>
+<p><strong><code>MatchingStrategy</code></strong> is an abstract base class. Concrete implementations are <code>NearestDriverStrategy</code>, <code>CheapestDriverStrategy</code>, and <code>FastestDriverStrategy</code>. Each one takes a list of available drivers and a pickup location and returns the best driver. Callers never care which algorithm runs.</p>
+<p><strong><code>PricingStrategy</code></strong> is a second abstract base. <code>PerKmPricing</code> and <code>SurgePricing</code> implement it. The trip calls <code>calculate()</code> on the strategy when it transitions to COMPLETED.</p>
+<p><strong><code>TripObserver</code></strong> is an interface that anything wanting notifications must implement. <code>DriverNotifier</code> and <code>RiderNotifier</code> are concrete implementations. The trip broadcasts to all registered observers on every state change.</p>
+<h2 id="ascii-class-diagram">ASCII Class Diagram</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>+------------------+     +--------------------+</span></span>
+<span class="line"><span>|   RideRequest    |     |   MatchingStrategy |  (abstract)</span></span>
+<span class="line"><span>|------------------|     |--------------------|</span></span>
+<span class="line"><span>| - rider: Rider   |     | + match(drivers,   |</span></span>
+<span class="line"><span>| - pickup: Loc    |     |   pickup) -> Driver|</span></span>
+<span class="line"><span>| - destination    |     +------+-------------+</span></span>
+<span class="line"><span>+------------------+            |</span></span>
+<span class="line"><span>                        +-------+-------+--------+</span></span>
+<span class="line"><span>                        |               |        |</span></span>
+<span class="line"><span>                  NearestDriver  CheapestDriver FastestDriver</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>+------------------+     +--------------------+</span></span>
+<span class="line"><span>|   Trip           |---->|   PricingStrategy  |  (abstract)</span></span>
+<span class="line"><span>|------------------|     |--------------------|</span></span>
+<span class="line"><span>| - state          |     | + calculate(trip)  |</span></span>
+<span class="line"><span>| - driver: Driver |     |   -> float         |</span></span>
+<span class="line"><span>| - rider: Rider   |     +------+-------------+</span></span>
+<span class="line"><span>| - observers      |            |</span></span>
+<span class="line"><span>| + accept()       |     PerKmPricing  SurgePricing</span></span>
+<span class="line"><span>| + driver_arrived()|</span></span>
+<span class="line"><span>| + start()        |     +--------------------+</span></span>
+<span class="line"><span>| + complete()     |     |   TripObserver     |  (abstract)</span></span>
+<span class="line"><span>| + cancel()       |     |--------------------|</span></span>
+<span class="line"><span>+------------------+     | + on_state_change  |</span></span>
+<span class="line"><span>         |               |   (trip, new_state)|</span></span>
+<span class="line"><span>         |               +------+-------------+</span></span>
+<span class="line"><span>         |                      |</span></span>
+<span class="line"><span>         +-------->  DriverNotifier  RiderNotifier</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>+------------------+     +------------------+</span></span>
+<span class="line"><span>|   Driver         |     |   Rider          |</span></span>
+<span class="line"><span>|------------------|     |------------------|</span></span>
+<span class="line"><span>| - driver_id      |     | - rider_id       |</span></span>
+<span class="line"><span>| - name           |     | - name           |</span></span>
+<span class="line"><span>| - location       |     | - location       |</span></span>
+<span class="line"><span>| - is_available   |     +------------------+</span></span>
+<span class="line"><span>| + update_location|</span></span>
+<span class="line"><span>+------------------+</span></span></code></pre>
+<h2 id="key-implementation">Key Implementation</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">from</span><span style="color:#79B8FF"> __future__</span><span style="color:#F97583"> import</span><span style="color:#E1E4E8"> annotations</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> math</span></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> uuid</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> abc </span><span style="color:#F97583">import</span><span style="color:#79B8FF"> ABC</span><span style="color:#E1E4E8">, abstractmethod</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> dataclasses </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> dataclass, field</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> enum </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> Enum, auto</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> typing </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> Optional</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">@dataclass</span></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> Location</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    latitude: </span><span style="color:#79B8FF">float</span></span>
+<span class="line"><span style="color:#E1E4E8">    longitude: </span><span style="color:#79B8FF">float</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> distance_to</span><span style="color:#E1E4E8">(self, other: Location) -> </span><span style="color:#79B8FF">float</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#9ECBFF">        """Euclidean distance — good enough for matching in LLD context."""</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> math.sqrt(</span></span>
+<span class="line"><span style="color:#E1E4E8">            (</span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">.latitude </span><span style="color:#F97583">-</span><span style="color:#E1E4E8"> other.latitude) </span><span style="color:#F97583">**</span><span style="color:#79B8FF"> 2</span></span>
+<span class="line"><span style="color:#F97583">            +</span><span style="color:#E1E4E8"> (</span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">.longitude </span><span style="color:#F97583">-</span><span style="color:#E1E4E8"> other.longitude) </span><span style="color:#F97583">**</span><span style="color:#79B8FF"> 2</span></span>
+<span class="line"><span style="color:#E1E4E8">        )</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">@dataclass</span></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> Driver</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    driver_id: </span><span style="color:#79B8FF">str</span></span>
+<span class="line"><span style="color:#E1E4E8">    name: </span><span style="color:#79B8FF">str</span></span>
+<span class="line"><span style="color:#E1E4E8">    location: Location</span></span>
+<span class="line"><span style="color:#E1E4E8">    is_available: </span><span style="color:#79B8FF">bool</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> True</span></span>
+<span class="line"><span style="color:#E1E4E8">    base_rate: </span><span style="color:#79B8FF">float</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> 1.0</span><span style="color:#6A737D">  # dollars per km, used by CheapestDriverStrategy</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> update_location</span><span style="color:#E1E4E8">(self, location: Location) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.location </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> location</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> set_available</span><span style="color:#E1E4E8">(self, available: </span><span style="color:#79B8FF">bool</span><span style="color:#E1E4E8">) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.is_available </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> available</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">@dataclass</span></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> Rider</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    rider_id: </span><span style="color:#79B8FF">str</span></span>
+<span class="line"><span style="color:#E1E4E8">    name: </span><span style="color:#79B8FF">str</span></span>
+<span class="line"><span style="color:#E1E4E8">    location: Location</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">@dataclass</span></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> RideRequest</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    rider: Rider</span></span>
+<span class="line"><span style="color:#E1E4E8">    pickup: Location</span></span>
+<span class="line"><span style="color:#E1E4E8">    destination: Location</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> TripState</span><span style="color:#E1E4E8">(</span><span style="color:#B392F0">Enum</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#79B8FF">    REQUESTED</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> auto()</span></span>
+<span class="line"><span style="color:#79B8FF">    ACCEPTED</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> auto()</span></span>
+<span class="line"><span style="color:#79B8FF">    DRIVER_ARRIVED</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> auto()</span></span>
+<span class="line"><span style="color:#79B8FF">    IN_PROGRESS</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> auto()</span></span>
+<span class="line"><span style="color:#79B8FF">    COMPLETED</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> auto()</span></span>
+<span class="line"><span style="color:#79B8FF">    CANCELLED</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> auto()</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Valid transitions: maps each state to the set of states it can move to.</span></span>
+<span class="line"><span style="color:#79B8FF">ALLOWED_TRANSITIONS</span><span style="color:#E1E4E8">: dict[TripState, set[TripState]] </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">    TripState.</span><span style="color:#79B8FF">REQUESTED</span><span style="color:#E1E4E8">: {TripState.</span><span style="color:#79B8FF">ACCEPTED</span><span style="color:#E1E4E8">, TripState.</span><span style="color:#79B8FF">CANCELLED</span><span style="color:#E1E4E8">},</span></span>
+<span class="line"><span style="color:#E1E4E8">    TripState.</span><span style="color:#79B8FF">ACCEPTED</span><span style="color:#E1E4E8">: {TripState.</span><span style="color:#79B8FF">DRIVER_ARRIVED</span><span style="color:#E1E4E8">, TripState.</span><span style="color:#79B8FF">CANCELLED</span><span style="color:#E1E4E8">},</span></span>
+<span class="line"><span style="color:#E1E4E8">    TripState.</span><span style="color:#79B8FF">DRIVER_ARRIVED</span><span style="color:#E1E4E8">: {TripState.</span><span style="color:#79B8FF">IN_PROGRESS</span><span style="color:#E1E4E8">, TripState.</span><span style="color:#79B8FF">CANCELLED</span><span style="color:#E1E4E8">},</span></span>
+<span class="line"><span style="color:#E1E4E8">    TripState.</span><span style="color:#79B8FF">IN_PROGRESS</span><span style="color:#E1E4E8">: {TripState.</span><span style="color:#79B8FF">COMPLETED</span><span style="color:#E1E4E8">},</span></span>
+<span class="line"><span style="color:#E1E4E8">    TripState.</span><span style="color:#79B8FF">COMPLETED</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">set</span><span style="color:#E1E4E8">(),</span></span>
+<span class="line"><span style="color:#E1E4E8">    TripState.</span><span style="color:#79B8FF">CANCELLED</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">set</span><span style="color:#E1E4E8">(),</span></span>
+<span class="line"><span style="color:#E1E4E8">}</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> TripObserver</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">ABC</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#B392F0">    @abstractmethod</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> on_state_change</span><span style="color:#E1E4E8">(self, trip: Trip, new_state: TripState) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        pass</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> DriverNotifier</span><span style="color:#E1E4E8">(</span><span style="color:#B392F0">TripObserver</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> on_state_change</span><span style="color:#E1E4E8">(self, trip: Trip, new_state: TripState) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        print</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#F97583">            f</span><span style="color:#9ECBFF">"[Driver </span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">trip.driver.name</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">] Trip </span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">trip.trip_id[:</span><span style="color:#79B8FF">8</span><span style="color:#E1E4E8">]</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">: "</span></span>
+<span class="line"><span style="color:#F97583">            f</span><span style="color:#9ECBFF">"state is now </span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">new_state.name</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">"</span></span>
+<span class="line"><span style="color:#E1E4E8">        )</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> RiderNotifier</span><span style="color:#E1E4E8">(</span><span style="color:#B392F0">TripObserver</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> on_state_change</span><span style="color:#E1E4E8">(self, trip: Trip, new_state: TripState) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        print</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#F97583">            f</span><span style="color:#9ECBFF">"[Rider </span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">trip.rider.name</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">] Trip </span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">trip.trip_id[:</span><span style="color:#79B8FF">8</span><span style="color:#E1E4E8">]</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">: "</span></span>
+<span class="line"><span style="color:#F97583">            f</span><span style="color:#9ECBFF">"state is now </span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">new_state.name</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">"</span></span>
+<span class="line"><span style="color:#E1E4E8">        )</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> PricingStrategy</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">ABC</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#B392F0">    @abstractmethod</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> calculate</span><span style="color:#E1E4E8">(self, trip: Trip) -> </span><span style="color:#79B8FF">float</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        pass</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> PerKmPricing</span><span style="color:#E1E4E8">(</span><span style="color:#B392F0">PricingStrategy</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#79B8FF"> __init__</span><span style="color:#E1E4E8">(self, rate_per_km: </span><span style="color:#79B8FF">float</span><span style="color:#E1E4E8">) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._rate </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> rate_per_km</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> calculate</span><span style="color:#E1E4E8">(self, trip: Trip) -> </span><span style="color:#79B8FF">float</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        dist </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> trip.request.pickup.distance_to(trip.request.destination)</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> round</span><span style="color:#E1E4E8">(dist </span><span style="color:#F97583">*</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">._rate, </span><span style="color:#79B8FF">2</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> SurgePricing</span><span style="color:#E1E4E8">(</span><span style="color:#B392F0">PricingStrategy</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#79B8FF"> __init__</span><span style="color:#E1E4E8">(self, base_rate: </span><span style="color:#79B8FF">float</span><span style="color:#E1E4E8">, surge_multiplier: </span><span style="color:#79B8FF">float</span><span style="color:#E1E4E8">) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._base </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> base_rate</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._multiplier </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> surge_multiplier</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> calculate</span><span style="color:#E1E4E8">(self, trip: Trip) -> </span><span style="color:#79B8FF">float</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        dist </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> trip.request.pickup.distance_to(trip.request.destination)</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> round</span><span style="color:#E1E4E8">(dist </span><span style="color:#F97583">*</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">._base </span><span style="color:#F97583">*</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">._multiplier, </span><span style="color:#79B8FF">2</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> Trip</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#79B8FF"> __init__</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#E1E4E8">        self,</span></span>
+<span class="line"><span style="color:#E1E4E8">        request: RideRequest,</span></span>
+<span class="line"><span style="color:#E1E4E8">        driver: Driver,</span></span>
+<span class="line"><span style="color:#E1E4E8">        pricing: PricingStrategy,</span></span>
+<span class="line"><span style="color:#E1E4E8">    ) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.trip_id </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> str</span><span style="color:#E1E4E8">(uuid.uuid4())</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.request </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> request</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.rider </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> request.rider</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.driver </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> driver</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._pricing </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> pricing</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.state </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> TripState.</span><span style="color:#79B8FF">REQUESTED</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._observers: list[TripObserver] </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> []</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.fare: Optional[</span><span style="color:#79B8FF">float</span><span style="color:#E1E4E8">] </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> None</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> add_observer</span><span style="color:#E1E4E8">(self, observer: TripObserver) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._observers.append(observer)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> _transition</span><span style="color:#E1E4E8">(self, new_state: TripState) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        allowed </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> ALLOWED_TRANSITIONS</span><span style="color:#E1E4E8">[</span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">.state]</span></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#E1E4E8"> new_state </span><span style="color:#F97583">not</span><span style="color:#F97583"> in</span><span style="color:#E1E4E8"> allowed:</span></span>
+<span class="line"><span style="color:#F97583">            raise</span><span style="color:#79B8FF"> ValueError</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#F97583">                f</span><span style="color:#9ECBFF">"Cannot transition from </span><span style="color:#79B8FF">{self</span><span style="color:#E1E4E8">.state.name</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF"> to </span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">new_state.name</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">."</span></span>
+<span class="line"><span style="color:#E1E4E8">            )</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.state </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> new_state</span></span>
+<span class="line"><span style="color:#F97583">        for</span><span style="color:#E1E4E8"> observer </span><span style="color:#F97583">in</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">._observers:</span></span>
+<span class="line"><span style="color:#E1E4E8">            observer.on_state_change(</span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">, new_state)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> accept</span><span style="color:#E1E4E8">(self) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.driver.set_available(</span><span style="color:#79B8FF">False</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._transition(TripState.</span><span style="color:#79B8FF">ACCEPTED</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> driver_arrived</span><span style="color:#E1E4E8">(self) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._transition(TripState.</span><span style="color:#79B8FF">DRIVER_ARRIVED</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> start</span><span style="color:#E1E4E8">(self) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._transition(TripState.</span><span style="color:#79B8FF">IN_PROGRESS</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> complete</span><span style="color:#E1E4E8">(self) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.fare </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">._pricing.calculate(</span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._transition(TripState.</span><span style="color:#79B8FF">COMPLETED</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.driver.set_available(</span><span style="color:#79B8FF">True</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> cancel</span><span style="color:#E1E4E8">(self) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._transition(TripState.</span><span style="color:#79B8FF">CANCELLED</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.driver.set_available(</span><span style="color:#79B8FF">True</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> MatchingStrategy</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">ABC</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#B392F0">    @abstractmethod</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> match</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#E1E4E8">        self, drivers: list[Driver], pickup: Location</span></span>
+<span class="line"><span style="color:#E1E4E8">    ) -> Optional[Driver]:</span></span>
+<span class="line"><span style="color:#F97583">        pass</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> NearestDriverStrategy</span><span style="color:#E1E4E8">(</span><span style="color:#B392F0">MatchingStrategy</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> match</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#E1E4E8">        self, drivers: list[Driver], pickup: Location</span></span>
+<span class="line"><span style="color:#E1E4E8">    ) -> Optional[Driver]:</span></span>
+<span class="line"><span style="color:#E1E4E8">        available </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> [d </span><span style="color:#F97583">for</span><span style="color:#E1E4E8"> d </span><span style="color:#F97583">in</span><span style="color:#E1E4E8"> drivers </span><span style="color:#F97583">if</span><span style="color:#E1E4E8"> d.is_available]</span></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#F97583"> not</span><span style="color:#E1E4E8"> available:</span></span>
+<span class="line"><span style="color:#F97583">            return</span><span style="color:#79B8FF"> None</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> min</span><span style="color:#E1E4E8">(available, </span><span style="color:#FFAB70">key</span><span style="color:#F97583">=lambda</span><span style="color:#E1E4E8"> d: d.location.distance_to(pickup))</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> CheapestDriverStrategy</span><span style="color:#E1E4E8">(</span><span style="color:#B392F0">MatchingStrategy</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#9ECBFF">    """Picks the driver with the lowest base rate per km."""</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> match</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#E1E4E8">        self, drivers: list[Driver], pickup: Location</span></span>
+<span class="line"><span style="color:#E1E4E8">    ) -> Optional[Driver]:</span></span>
+<span class="line"><span style="color:#E1E4E8">        available </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> [d </span><span style="color:#F97583">for</span><span style="color:#E1E4E8"> d </span><span style="color:#F97583">in</span><span style="color:#E1E4E8"> drivers </span><span style="color:#F97583">if</span><span style="color:#E1E4E8"> d.is_available]</span></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#F97583"> not</span><span style="color:#E1E4E8"> available:</span></span>
+<span class="line"><span style="color:#F97583">            return</span><span style="color:#79B8FF"> None</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> min</span><span style="color:#E1E4E8">(available, </span><span style="color:#FFAB70">key</span><span style="color:#F97583">=lambda</span><span style="color:#E1E4E8"> d: d.base_rate)</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> FastestDriverStrategy</span><span style="color:#E1E4E8">(</span><span style="color:#B392F0">MatchingStrategy</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span></span>
+<span class="line"><span style="color:#9ECBFF">    'Fastest' is approximated by nearest driver.</span></span>
+<span class="line"><span style="color:#9ECBFF">    A real implementation would call a routing API with live traffic data.</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> match</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#E1E4E8">        self, drivers: list[Driver], pickup: Location</span></span>
+<span class="line"><span style="color:#E1E4E8">    ) -> Optional[Driver]:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> NearestDriverStrategy().match(drivers, pickup)</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> RideSharingService</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#79B8FF"> __init__</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#E1E4E8">        self,</span></span>
+<span class="line"><span style="color:#E1E4E8">        matching_strategy: MatchingStrategy,</span></span>
+<span class="line"><span style="color:#E1E4E8">        pricing_strategy: PricingStrategy,</span></span>
+<span class="line"><span style="color:#E1E4E8">    ) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._drivers: list[Driver] </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> []</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._matching </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> matching_strategy</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._pricing </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> pricing_strategy</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> register_driver</span><span style="color:#E1E4E8">(self, driver: Driver) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._drivers.append(driver)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> request_ride</span><span style="color:#E1E4E8">(self, request: RideRequest) -> Trip:</span></span>
+<span class="line"><span style="color:#E1E4E8">        driver </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">._matching.match(</span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">._drivers, request.pickup)</span></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#E1E4E8"> driver </span><span style="color:#F97583">is</span><span style="color:#79B8FF"> None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">            raise</span><span style="color:#79B8FF"> RuntimeError</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"No drivers available."</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">        trip </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> Trip(</span><span style="color:#FFAB70">request</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">request, </span><span style="color:#FFAB70">driver</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">driver, </span><span style="color:#FFAB70">pricing</span><span style="color:#F97583">=</span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">._pricing)</span></span>
+<span class="line"><span style="color:#E1E4E8">        trip.add_observer(DriverNotifier())</span></span>
+<span class="line"><span style="color:#E1E4E8">        trip.add_observer(RiderNotifier())</span></span>
+<span class="line"><span style="color:#E1E4E8">        trip.accept()</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> trip</span></span></code></pre>
+<h2 id="design-decisions-and-trade-offs">Design Decisions and Trade-offs</h2>
+<p><strong>State pattern vs. enum plus transition table.</strong></p>
+<p>The full State pattern (a class per state, each responsible for its own transition logic) is powerful when states have meaningfully different behavior. Here, each state mostly differs in which transitions are legal. The logic does not vary per state, only the permission set does. Using an <code>ALLOWED_TRANSITIONS</code> dict with an enum keeps the machine flat, readable, and easy to modify. Adding a new state is one enum value and one dict entry. With the full State pattern it would be a new class plus wiring. The enum approach is the right choice here.</p>
+<p><strong>Observer for notifications.</strong></p>
+<p>The trip does not know whether notifications go to push notifications, SMS, WebSocket broadcasts, or logs. It just calls <code>on_state_change()</code> on each registered observer. This means the notification channel is a plug-in. In a test you register a mock observer that records calls. In production you register real notifiers. The trip class never changes. This is the canonical Observer pattern motivation: decouple event producers from event consumers.</p>
+<p><strong>Driver availability as a flag on <code>Driver</code>.</strong></p>
+<p>A driver’s availability is set to <code>False</code> on <code>accept()</code> and reset to <code>True</code> on <code>complete()</code> or <code>cancel()</code>. This is a simple flag mutation and it is intentional. The alternative, storing availability in the service and keeping <code>Driver</code> immutable, makes it harder for the matching strategy to inspect availability since it only receives <code>Driver</code> objects. Keeping the flag on <code>Driver</code> keeps the matching logic clean.</p>
+<p><strong><code>FastestDriverStrategy</code> delegating to <code>NearestDriverStrategy</code>.</strong></p>
+<p>This is honest about what the LLD model can actually compute. True ETA requires a routing API with live traffic data, which is out of scope for this class design. The comment in the code says so explicitly. The strategy exists as a placeholder so that the interface is complete and a real implementation can replace the internals later without any changes to <code>RideSharingService</code> or <code>Trip</code>.</p>
+<p><strong>Why calculate fare at completion, not at request time?</strong></p>
+<p>Fare calculation at request time is an estimate. The actual trip might take a different route, encounter surge pricing conditions that change mid-ride, or be cancelled before starting. Calculating at <code>complete()</code> means the fare is based on the actual trip, not a prediction. <code>PricingStrategy.calculate()</code> receives the whole <code>Trip</code> object, so it has access to whatever data it needs: request locations, driver, timestamps if you add them.</p>
+<p><strong>Real-time location updates.</strong></p>
+<p>The <code>update_location()</code> method on <code>Driver</code> is the entry point for GPS updates. In a real system, location updates arrive continuously from the driver’s mobile app. The matching strategy runs against the latest snapshot of driver locations. This LLD does not model the update frequency or the data pipeline behind it because that is a distributed systems concern, not a class design concern. The key point is that the class model supports location updates without any structural change.</p>
+<h2 id="what-id-extend-next">What I’d Extend Next</h2>
+<p>A <code>TripHistory</code> that records every state transition with a timestamp, a <code>RatingService</code> that allows riders and drivers to rate each other after completion, and a <code>CancellationPolicy</code> that determines whether a cancellation fee applies based on how far through the trip lifecycle the cancellation happened. Each of these is a clean addition that plugs in around the existing boundaries.</p>
+<hr>
+<p>If you’d approach the state machine differently or want to argue about where driver availability should live, I’d genuinely like to hear it. Reach out on <a href="https://twitter.com/anudeepsamaiya">Twitter</a> or <a href="https://www.linkedin.com/in/anudeepsamaiya/">LinkedIn</a>.</p> </div> <!-- Social Share Buttons --> <div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-800"> <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Share this post:</p> <div class="flex gap-3"> <a href="https://twitter.com/intent/tweet?text=Design%20a%20Ride%20Sharing%20Service%3A%20Matching%2C%20Routing%2C%20and%20Real-Time%20State&url=https%3A%2F%2Fanudeepsamaiya.github.io%2Fblog%2F2024-11-28-lld-ride-sharing%2F" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors" aria-label="Share on Twitter"> <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"> <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path> </svg>
+Twitter
+</a> <a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fanudeepsamaiya.github.io%2Fblog%2F2024-11-28-lld-ride-sharing%2F" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg transition-colors" aria-label="Share on LinkedIn"> <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"> <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"></path> </svg>
+LinkedIn
+</a> <a href="https://news.ycombinator.com/submitlink?u=https%3A%2F%2Fanudeepsamaiya.github.io%2Fblog%2F2024-11-28-lld-ride-sharing%2F&t=Design%20a%20Ride%20Sharing%20Service%3A%20Matching%2C%20Routing%2C%20and%20Real-Time%20State" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors" aria-label="Share on Hacker News"> <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"> <path d="M0 24V0h24v24H0zM6.951 5.896l4.112 7.708v5.064h1.583v-4.972l4.148-7.799h-1.749l-2.457 4.875c-.372.745-.688 1.434-.688 1.434s-.297-.708-.651-1.434L8.831 5.896h-1.88z"></path> </svg>
+HN
+</a> </div> </div> <!-- Tags at bottom --> <div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-800"> <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Tags:</p> <div class="flex flex-wrap gap-2"> <span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#lld </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#machine-coding </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#object-oriented-design </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#python </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#real-time-systems </span> </div> </div> <section class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800"><h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+Related Posts
+</h2><div class="space-y-4"><a href="/blog/2022-10-20-lld-vending-machine" class="block p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Design a Vending Machine: State Machines in Practice</h3><p class="text-gray-600 dark:text-gray-400 text-sm mb-2">A first-principles LLD walkthrough of a vending machine using the State pattern. Covers state transitions, inventory management, payment handling, and why State beats if/else chains when behavior must vary by state.</p><div class="flex gap-2 flex-wrap"><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">lld</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">machine-coding</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">object-oriented-design</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">python</span></div></a><a href="/blog/2023-03-08-lld-atm-machine" class="block p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Design an ATM Machine: Transactions, State, and Security in LLD</h3><p class="text-gray-600 dark:text-gray-400 text-sm mb-2">A first-principles LLD walkthrough of an ATM covering state management, transaction types, card and account entities, cash dispensing logic, and why atomicity matters even in a machine-coding exercise.</p><div class="flex gap-2 flex-wrap"><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">lld</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">machine-coding</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">object-oriented-design</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">python</span></div></a><a href="/blog/2023-08-14-lld-logging-library" class="block p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Design a Logging Library Like log4j: Filters, Appenders, and Formatters</h3><p class="text-gray-600 dark:text-gray-400 text-sm mb-2">A first-principles LLD walkthrough of a logging library covering logger hierarchy, log levels, appenders, formatters, and the Chain of Responsibility pattern for filter chains. Why appenders must be independent of formatters.</p><div class="flex gap-2 flex-wrap"><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">lld</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">machine-coding</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">object-oriented-design</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">python</span></div></a></div></section> <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800"> <a href="/blog" class="text-blue-600 dark:text-blue-400 hover:underline">
+← Back to all posts
+</a> </div> </article> <div class="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 py-8 mt-12"> <div class="max-w-4xl mx-auto px-4"> <div class="text-center mb-6"> <h2 class="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Let's Connect! 💬</h2> <p class="text-base text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
+Whether you're looking to hire, want to collaborate on a project, or just want to chat about tech—I'd love to hear from you!
+</p> </div> <div class="flex flex-col sm:flex-row items-center justify-center gap-6"> <astro-island uid="ZC9c4W" prefix="r1" component-url="/_astro/ContactForm.DeBm0i4w.js" component-export="default" renderer-url="/_astro/client.AE0akZX9.js" props="{}" ssr client="load" opts="{&quot;name&quot;:&quot;ContactForm&quot;,&quot;value&quot;:true}"></astro-island> <div class="flex items-center gap-4"> <div class="h-8 w-px bg-gray-300 dark:bg-gray-700 hidden sm:block"></div> <p class="text-gray-600 dark:text-gray-400 text-sm hidden sm:block">or find me on</p> </div> <div class="flex gap-4"> <a href="https://github.com/anudeepsamaiya" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="GitHub"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/github.svg" alt="GitHub" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://twitter.com/anudeepsamaiya" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="X (Twitter)"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/x.svg" alt="X (Twitter)" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://www.linkedin.com/in/anudeepsamaiya/" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="LinkedIn"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/linkedin.svg" alt="LinkedIn" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://stackoverflow.com/users/2079692/anudeep-samaiya" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="Stack Overflow"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/stackoverflow.svg" alt="Stack Overflow" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://leetcode.com/anudeepsamaiya/" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="LeetCode"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/leetcode.svg" alt="LeetCode" class="w-6 h-6 opacity-60 dark:invert"> </a> </div> </div> </div> </div>  </main> <footer class="py-6 px-4 border-t border-gray-200 dark:border-gray-800"> <div class="max-w-4xl mx-auto text-center text-gray-600 dark:text-gray-400 text-sm"> <p class="mb-2"> © 2018-2026 Anudeep Samaiya. All rights reserved. </p> <p>
+Code:
+<a href="https://github.com/anudeepsamaiya/anudeepsamaiya.github.io/blob/master/LICENSE" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline mx-1">
+MIT License
+</a>
+| Content:
+<a href="https://github.com/anudeepsamaiya/anudeepsamaiya.github.io/blob/master/LICENSE-CONTENT" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline mx-1">
+CC BY 4.0
+</a> </p> </div> </footer> </div> </body></html> 
