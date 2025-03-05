@@ -1,0 +1,720 @@
+<!DOCTYPE html><html lang="en-US"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description" content="Master the fundamentals of designing a production URL shortener: requirements, capacity planning, distributed ID generation, database design, and caching strategies for system design interviews."><meta name="author" content="Anudeep Samaiya"><meta name="google-site-verification" content="twVFs_dUxCyldlt-Sif72GezMsXbI0wKJEVTBJ1A22g"><link rel="canonical" href="https://anudeepsamaiya.github.io/blog/2025-03-05-url-shortener-system-design-part1-hld/"><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/site.webmanifest"><title>URL Shortener System Design (Part 1): High-Level Architecture | Anudeep Samaiya</title><script>
+      // Initialize theme before page renders to prevent flash
+      (function() {
+        const theme = localStorage.getItem('theme') || 'light';
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script><link rel="stylesheet" href="/_astro/about.Cg2y2hoq.css">
+<style>.prose pre{overflow-x:auto}.prose pre:has(code:contains("┌")),.prose pre:has(code:contains("│")),.prose pre:has(code:contains("▶")),.prose pre:has(code:contains("└")){text-align:center;display:flex;justify-content:center}
+</style></head> <body class="bg-white dark:bg-gray-900"> <div class="min-h-screen flex flex-col"> <header class="py-6 px-4 border-b border-gray-200 dark:border-gray-800"> <nav class="max-w-4xl mx-auto flex justify-between items-center"> <a href="/" class="text-2xl font-bold text-gray-900 dark:text-white"> Anudeep Samaiya </a> <div class="flex items-center gap-6"> <ul class="flex gap-6"> <li> <a href="/about" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"> About </a> </li><li> <a href="/blog" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"> Blog </a> </li><li> <a href="/reading" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"> Reading </a> </li> </ul> <style>astro-island,astro-slot,astro-static-slot{display:contents}</style><script>(()=>{var e=async t=>{await(await t())()};(self.Astro||(self.Astro={})).load=e;window.dispatchEvent(new Event("astro:load"));})();</script><script>(()=>{var A=Object.defineProperty;var g=(i,o,a)=>o in i?A(i,o,{enumerable:!0,configurable:!0,writable:!0,value:a}):i[o]=a;var d=(i,o,a)=>g(i,typeof o!="symbol"?o+"":o,a);{let i={0:t=>m(t),1:t=>a(t),2:t=>new RegExp(t),3:t=>new Date(t),4:t=>new Map(a(t)),5:t=>new Set(a(t)),6:t=>BigInt(t),7:t=>new URL(t),8:t=>new Uint8Array(t),9:t=>new Uint16Array(t),10:t=>new Uint32Array(t),11:t=>1/0*t},o=t=>{let[l,e]=t;return l in i?i[l](e):void 0},a=t=>t.map(o),m=t=>typeof t!="object"||t===null?t:Object.fromEntries(Object.entries(t).map(([l,e])=>[l,o(e)]));class y extends HTMLElement{constructor(){super(...arguments);d(this,"Component");d(this,"hydrator");d(this,"hydrate",async()=>{var b;if(!this.hydrator||!this.isConnected)return;let e=(b=this.parentElement)==null?void 0:b.closest("astro-island[ssr]");if(e){e.addEventListener("astro:hydrate",this.hydrate,{once:!0});return}let c=this.querySelectorAll("astro-slot"),n={},h=this.querySelectorAll("template[data-astro-template]");for(let r of h){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("data-astro-template")||"default"]=r.innerHTML,r.remove())}for(let r of c){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("name")||"default"]=r.innerHTML)}let p;try{p=this.hasAttribute("props")?m(JSON.parse(this.getAttribute("props"))):{}}catch(r){let s=this.getAttribute("component-url")||"<unknown>",v=this.getAttribute("component-export");throw v&&(s+=` (export ${v})`),console.error(`[hydrate] Error parsing props for component ${s}`,this.getAttribute("props"),r),r}let u;await this.hydrator(this)(this.Component,p,n,{client:this.getAttribute("client")}),this.removeAttribute("ssr"),this.dispatchEvent(new CustomEvent("astro:hydrate"))});d(this,"unmount",()=>{this.isConnected||this.dispatchEvent(new CustomEvent("astro:unmount"))})}disconnectedCallback(){document.removeEventListener("astro:after-swap",this.unmount),document.addEventListener("astro:after-swap",this.unmount,{once:!0})}connectedCallback(){if(!this.hasAttribute("await-children")||document.readyState==="interactive"||document.readyState==="complete")this.childrenConnectedCallback();else{let e=()=>{document.removeEventListener("DOMContentLoaded",e),c.disconnect(),this.childrenConnectedCallback()},c=new MutationObserver(()=>{var n;((n=this.lastChild)==null?void 0:n.nodeType)===Node.COMMENT_NODE&&this.lastChild.nodeValue==="astro:end"&&(this.lastChild.remove(),e())});c.observe(this,{childList:!0}),document.addEventListener("DOMContentLoaded",e)}}async childrenConnectedCallback(){let e=this.getAttribute("before-hydration-url");e&&await import(e),this.start()}async start(){let e=JSON.parse(this.getAttribute("opts")),c=this.getAttribute("client");if(Astro[c]===void 0){window.addEventListener(`astro:${c}`,()=>this.start(),{once:!0});return}try{await Astro[c](async()=>{let n=this.getAttribute("renderer-url"),[h,{default:p}]=await Promise.all([import(this.getAttribute("component-url")),n?import(n):()=>()=>{}]),u=this.getAttribute("component-export")||"default";if(!u.includes("."))this.Component=h[u];else{this.Component=h;for(let f of u.split("."))this.Component=this.Component[f]}return this.hydrator=p,this.hydrate},e,this)}catch(n){console.error(`[astro-island] Error hydrating ${this.getAttribute("component-url")}`,n)}}attributeChangedCallback(){this.hydrate()}}d(y,"observedAttributes",["props"]),customElements.get("astro-island")||customElements.define("astro-island",y)}})();</script><astro-island uid="Z1WQ4OE" prefix="r0" component-url="/_astro/ThemeToggle.C_FMJT46.js" component-export="default" renderer-url="/_astro/client.AE0akZX9.js" props="{}" ssr client="load" opts="{&quot;name&quot;:&quot;ThemeToggle&quot;,&quot;value&quot;:true}" await-children><div class="w-9 h-9 p-2 rounded-lg bg-gray-100 dark:bg-gray-800"><div class="w-5 h-5"></div></div><!--astro:end--></astro-island> </div> </nav> </header> <main class="flex-1">  <article class="max-w-4xl mx-auto px-4 py-12"> <header class="mb-8"> <h1 class="text-4xl font-bold mb-4 text-gray-900 dark:text-white"> URL Shortener System Design (Part 1): High-Level Architecture </h1> <div class="flex items-center gap-4 text-gray-600 dark:text-gray-400"> <time> March 5, 2025 </time> </div> </header> <div class="prose prose-lg dark:prose-invert max-w-none mb-12"> <p>The URL shortener is a classic system design interview question that tests your understanding of distributed systems, caching strategies, and production trade-offs. It looks deceptively simple (“just generate a short code and redirect”), but the real challenge is handling scale, ensuring reliability, and making defensible architectural choices.</p>
+<p>This is <strong>Part 1</strong> of a two-part series. In this post, I’ll cover the <strong>high-level design (HLD)</strong>: requirements gathering, capacity planning, ID generation approaches, database design, architecture, and caching strategy. These are the fundamentals you need to nail in any system design interview.</p>
+<p><strong>Part 2</strong> (coming next) dives into <strong>low-level implementation details</strong>: analytics pipelines, security layers, observability, and production operational concerns with complete code implementations.</p>
+<h2 id="start-with-requirements-dont-skip-this">Start with Requirements (Don’t Skip This)</h2>
+<p>Many candidates jump straight to architecture in interviews. This is a mistake. Spend 5 minutes clarifying requirements, because it shows you think before coding and prevents you from solving the wrong problem.</p>
+<p>Here’s what you need to nail down:</p>
+<h3 id="functional-scope">Functional Scope</h3>
+<ul>
+<li><strong>Core flow</strong>: User submits long URL → get short URL → short URL redirects to original</li>
+<li><strong>Custom aliases</strong>: Can users pick their own short codes? (Nice to have, adds complexity)</li>
+<li><strong>Analytics</strong>: Track clicks, geography, devices? (Almost always yes, because this drives architecture)</li>
+<li><strong>Expiration</strong>: Do links expire? (TTL support affects storage and caching)</li>
+<li><strong>User accounts</strong>: Anonymous vs authenticated users? (Affects rate limiting and quotas)</li>
+</ul>
+<h3 id="scale-assumptions">Scale Assumptions</h3>
+<p>Ask for numbers. If the interviewer is vague, propose something reasonable:</p>
+<ul>
+<li><strong>100 million URLs created per month</strong> (realistic for a mid-sized service)</li>
+<li><strong>100:1 read-to-write ratio</strong> (redirects vastly outnumber creation)</li>
+<li><strong>5-year data retention</strong> (affects storage planning)</li>
+</ul>
+<p>This gives you:</p>
+<ul>
+<li><strong>Writes</strong>: 100M/month ≈ 40 QPS average, ~120 QPS peak</li>
+<li><strong>Reads</strong>: 10B/month ≈ 4,000 QPS average, ~20,000 QPS peak</li>
+</ul>
+<p>The 100:1 ratio is crucial. It tells you this is a read-heavy system where caching matters more than write optimization.</p>
+<h3 id="non-functional-requirements">Non-Functional Requirements</h3>
+<ul>
+<li><strong>Availability</strong>: 99.99% (4 nines = 52 minutes downtime/year)</li>
+<li><strong>Latency</strong>: &#x3C;100ms redirect globally (p99 - this is aggressive)</li>
+<li><strong>Durability</strong>: Zero data loss for URL mappings (eventual consistency for analytics is OK)</li>
+</ul>
+<p>Write these down. They’ll guide every decision you make.</p>
+<h2 id="do-the-math-back-of-the-envelope-calculations">Do the Math (Back-of-the-Envelope Calculations)</h2>
+<p>Always do capacity planning on the whiteboard. It shows you think about scale and helps you make informed technology choices. Here’s how I break it down:</p>
+<h3 id="traffic-analysis">Traffic Analysis</h3>
+<p>Start with what you know:</p>
+<ul>
+<li>100M URLs/month ÷ 30 days ÷ 86,400 sec = <strong>40 writes/sec average</strong></li>
+<li>Peak traffic (assume 3x): <strong>120 writes/sec</strong></li>
+<li>100:1 read ratio: <strong>4,000 redirects/sec average</strong>, <strong>20,000 redirects/sec peak</strong></li>
+</ul>
+<p>The key insight: <strong>writes are trivial</strong> (any RDBMS handles 120 QPS easily), but <strong>reads are the bottleneck</strong>. At 20k QPS, you can’t hit the database for every redirect. Caching is mandatory, not optional.</p>
+<h3 id="storage-planning">Storage Planning</h3>
+<p>Calculate per-record size:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>URL record:</span></span>
+<span class="line"><span>- short_code: 8 bytes</span></span>
+<span class="line"><span>- long_url: 2KB (plan for max, not average)</span></span>
+<span class="line"><span>- user_id: 8 bytes</span></span>
+<span class="line"><span>- created_at: 8 bytes</span></span>
+<span class="line"><span>- expires_at: 8 bytes</span></span>
+<span class="line"><span>- metadata: ~100 bytes</span></span>
+<span class="line"><span>Total: ~2.2KB (round to 3KB with DB overhead)</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>5-year capacity:</span></span>
+<span class="line"><span>- 100M/month × 12 × 5 = 6 billion URLs</span></span>
+<span class="line"><span>- 6B × 3KB = 18TB raw</span></span>
+<span class="line"><span>- With 3x replication: 54TB</span></span>
+<span class="line"><span>- Add indexes (2x data size): ~100TB total</span></span></code></pre>
+<p>This fits comfortably on modern hardware. A single well-configured Postgres instance can handle this, though you’ll want to plan for sharding as you approach 10-20TB per shard.</p>
+<h3 id="analytics-storage-the-hidden-iceberg">Analytics Storage: The Hidden Iceberg</h3>
+<p>Here’s where candidates often stumble: analytics data grows much faster than URL data.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Click event:</span></span>
+<span class="line"><span>- short_code: 8 bytes</span></span>
+<span class="line"><span>- timestamp: 8 bytes</span></span>
+<span class="line"><span>- ip_address: 16 bytes (IPv6)</span></span>
+<span class="line"><span>- user_agent: 200 bytes</span></span>
+<span class="line"><span>- referrer: 200 bytes</span></span>
+<span class="line"><span>- geo_data: 50 bytes</span></span>
+<span class="line"><span>Total: ~500 bytes per click</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>5-year volume:</span></span>
+<span class="line"><span>- 10B clicks/month × 60 months = 600 billion events</span></span>
+<span class="line"><span>- 600B × 500 bytes = 300TB raw</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>With compression (time-series DB gives 5:1 ratio): ~60TB</span></span></code></pre>
+<p><strong>Critical decision point</strong>: Analytics is 300TB vs 18TB for URLs. You need separate storage strategies:</p>
+<ul>
+<li><strong>URL mappings</strong>: Strong consistency, ACID, fast point lookups → Postgres</li>
+<li><strong>Analytics</strong>: Eventual consistency, columnar storage, aggregation queries → ClickHouse/TimescaleDB</li>
+</ul>
+<h3 id="cache-sizing">Cache Sizing</h3>
+<p>Apply the Pareto principle: 80% of traffic hits 20% of URLs.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Hot URLs: 20% × 6B = 1.2B URLs</span></span>
+<span class="line"><span>Cache size: 1.2B × 500 bytes (compressed) = 600GB</span></span>
+<span class="line"><span>Plan for: 1TB Redis cluster (room for growth)</span></span></code></pre>
+<h3 id="bandwidth-usually-not-the-problem">Bandwidth (Usually Not the Problem)</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Peak reads: 20k QPS × 3KB = 60 MB/sec</span></span>
+<span class="line"><span>Peak writes: 120 QPS × 3KB = 360 KB/sec</span></span></code></pre>
+<p>Bandwidth is negligible. Don’t overthink it.</p>
+<h3 id="what-this-math-tells-you">What This Math Tells You</h3>
+<ol>
+<li><strong>Read optimization is critical</strong> - 99.5% of traffic is redirects</li>
+<li><strong>Caching is mandatory</strong> - Can’t sustain 20k DB queries/sec</li>
+<li><strong>Storage strategy must differ</strong> - URLs vs analytics need different databases</li>
+<li><strong>Scale is manageable</strong> - You don’t need NoSQL exotic solutions yet</li>
+</ol>
+<p>These numbers guide every architectural decision that follows.</p>
+<h2 id="the-hard-part-generating-short-codes">The Hard Part: Generating Short Codes</h2>
+<p>This is where most interviews focus, and for good reason: it tests your understanding of distributed systems. You need codes that are:</p>
+<ol>
+<li><strong>Unique</strong> (no collisions - data integrity)</li>
+<li><strong>Short</strong> (6-7 characters - user experience)</li>
+<li><strong>Unpredictable</strong> (security - prevent enumeration)</li>
+<li><strong>Fast to generate</strong> (120 QPS - no coordination bottlenecks)</li>
+</ol>
+<h3 id="understanding-the-keyspace">Understanding the Keyspace</h3>
+<p>With 7 characters using base62 encoding [a-zA-Z0-9]:</p>
+<ul>
+<li>Keyspace: 62^7 = <strong>3.5 trillion</strong> possible codes</li>
+<li>Our need: 6 billion URLs over 5 years</li>
+<li>Utilization: 0.17% of keyspace</li>
+</ul>
+<p>Space is not the constraint. The challenge is generating unique IDs across multiple servers without coordination overhead.</p>
+<h3 id="approach-1-hash-based-generation">Approach 1: Hash-Based Generation</h3>
+<p>The first approach most people think of: hash the URL and use the first N characters.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> hashlib</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> generate_short_code_hash</span><span style="color:#E1E4E8">(long_url: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">, attempt: </span><span style="color:#79B8FF">int</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> 0</span><span style="color:#E1E4E8">) -> </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#9ECBFF">    """Hash-based generation with retry on collision"""</span></span>
+<span class="line"><span style="color:#E1E4E8">    input_str </span><span style="color:#F97583">=</span><span style="color:#F97583"> f</span><span style="color:#9ECBFF">"</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">long_url</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">#</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">attempt</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">"</span><span style="color:#F97583"> if</span><span style="color:#E1E4E8"> attempt </span><span style="color:#F97583">></span><span style="color:#79B8FF"> 0</span><span style="color:#F97583"> else</span><span style="color:#E1E4E8"> long_url</span></span>
+<span class="line"><span style="color:#E1E4E8">    hash_bytes </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> hashlib.sha256(input_str.encode()).digest()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Take first 6 bytes, convert to base62</span></span>
+<span class="line"><span style="color:#E1E4E8">    num </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> int</span><span style="color:#E1E4E8">.from_bytes(hash_bytes[:</span><span style="color:#79B8FF">6</span><span style="color:#E1E4E8">], </span><span style="color:#9ECBFF">'big'</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> base62_encode(num)[:</span><span style="color:#79B8FF">7</span><span style="color:#E1E4E8">]</span></span></code></pre>
+<p><strong>Collision Analysis</strong></p>
+<p>With 6 billion URLs in a 3.5 trillion keyspace:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Using Birthday Paradox:</span></span>
+<span class="line"><span>P(collision) = 1 - e^(-n²/2N)</span></span>
+<span class="line"><span>P(collision) = 1 - e^(-(6×10⁹)² / (2×3.5×10¹²))</span></span>
+<span class="line"><span>P(collision) ≈ 0.5%</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Expected collisions: 6B × 0.005 = 30 million over 5 years</span></span>
+<span class="line"><span>Rate: ~6,000 collisions/month = 0.2 QPS spent on collision retries</span></span></code></pre>
+<p><strong>Trade-offs:</strong></p>
+<ul>
+<li>✅ <strong>Automatic deduplication</strong>: Same URL always gets same code</li>
+<li>✅ <strong>No coordination</strong>: Each server generates independently</li>
+<li>❌ <strong>Collision handling required</strong>: Need DB query before every insert (40 QPS)</li>
+<li>❌ <strong>Retry logic complexity</strong>: Must handle retry storms during high load</li>
+</ul>
+<p>The collision rate is low, but checking existence for every insert adds 40 QPS of database load just for validation. This is acceptable but not ideal.</p>
+<h3 id="approach-2-counter-based-generation-naive">Approach 2: Counter-Based Generation (Naive)</h3>
+<p>A simpler approach: maintain a global counter and increment atomically.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> CounterService</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#79B8FF"> __init__</span><span style="color:#E1E4E8">(self, redis_client):</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.redis </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> redis_client</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> get_next_id</span><span style="color:#E1E4E8">(self) -> </span><span style="color:#79B8FF">int</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#6A737D">        # INCR is atomic in Redis</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.redis.incr(</span><span style="color:#9ECBFF">"global_url_counter"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> generate_short_code</span><span style="color:#E1E4E8">() -> </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    counter </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> counter_service.get_next_id()</span></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> base62_encode(counter).zfill(</span><span style="color:#79B8FF">7</span><span style="color:#E1E4E8">)  </span><span style="color:#6A737D"># "0000001", "0000002", ...</span></span></code></pre>
+<p><strong>Trade-offs:</strong></p>
+<ul>
+<li>✅ <strong>Zero collisions</strong>: Counter guarantees uniqueness</li>
+<li>✅ <strong>Fast</strong>: Simple atomic increment</li>
+<li>✅ <strong>Simple</strong>: Easy to implement and reason about</li>
+<li>❌ <strong>SPOF</strong>: Redis down = can’t create URLs (violates 99.99% availability)</li>
+<li>❌ <strong>Hot spot</strong>: Every write hits Redis (120 QPS to one service)</li>
+<li>❌ <strong>Sequential IDs</strong>: Predictable codes (“0000001”, “0000002”) enable enumeration attacks</li>
+</ul>
+<p>The SPOF is the critical issue. If Redis is unavailable for 5 minutes, you’ve already blown your availability budget for the month.</p>
+<h3 id="approach-3-range-based-counter-solving-spof">Approach 3: Range-Based Counter (Solving SPOF)</h3>
+<p>To eliminate the single point of failure, pre-allocate ID ranges to each app server. Each server requests a range once, then generates IDs locally without coordination.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> RangeAllocator</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#9ECBFF">    """Each app server allocates a range of 100k IDs at a time"""</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#79B8FF"> __init__</span><span style="color:#E1E4E8">(self, redis_client, server_id: </span><span style="color:#79B8FF">int</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.redis </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> redis_client</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.server_id </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> server_id</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.range_size </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 100_000</span><span style="color:#6A737D">  # 100k IDs per allocation</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.current </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> None</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.max </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> None</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> get_next_id</span><span style="color:#E1E4E8">(self) -> </span><span style="color:#79B8FF">int</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.current </span><span style="color:#F97583">is</span><span style="color:#79B8FF"> None</span><span style="color:#F97583"> or</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.current </span><span style="color:#F97583">>=</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.max:</span></span>
+<span class="line"><span style="color:#79B8FF">            self</span><span style="color:#E1E4E8">._allocate_range()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.current </span><span style="color:#F97583">+=</span><span style="color:#79B8FF"> 1</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.current</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> _allocate_range</span><span style="color:#E1E4E8">(self):</span></span>
+<span class="line"><span style="color:#9ECBFF">        """</span></span>
+<span class="line"><span style="color:#9ECBFF">        Atomically allocate a range from Redis</span></span>
+<span class="line"><span style="color:#9ECBFF">        Runs ~once per 25 minutes at 40 QPS (100k / 40 = 2500 seconds)</span></span>
+<span class="line"><span style="color:#9ECBFF">        """</span></span>
+<span class="line"><span style="color:#6A737D">        # Redis atomic operation</span></span>
+<span class="line"><span style="color:#E1E4E8">        range_start </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.redis.incrby(</span><span style="color:#9ECBFF">"global_counter"</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">.range_size)</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.current </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> range_start </span><span style="color:#F97583">-</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.range_size </span><span style="color:#F97583">+</span><span style="color:#79B8FF"> 1</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.max </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> range_start</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">        # Optional: Log allocation for debugging</span></span>
+<span class="line"><span style="color:#E1E4E8">        logger.info(</span><span style="color:#F97583">f</span><span style="color:#9ECBFF">"Server </span><span style="color:#79B8FF">{self</span><span style="color:#E1E4E8">.server_id</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF"> allocated range </span><span style="color:#79B8FF">{self</span><span style="color:#E1E4E8">.current</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">-</span><span style="color:#79B8FF">{self</span><span style="color:#E1E4E8">.max</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">"</span><span style="color:#E1E4E8">)</span></span></code></pre>
+<p><strong>Trade-offs:</strong></p>
+<ul>
+<li>✅ <strong>No SPOF</strong>: Redis downtime doesn’t block ID generation (servers use allocated range)</li>
+<li>✅ <strong>Lower load</strong>: Redis hit once per 100k URLs (~25 minutes at 40 QPS)</li>
+<li>✅ <strong>Zero collisions</strong>: Ranges don’t overlap</li>
+<li>❌ <strong>ID waste on crashes</strong>: Server crash loses up to 100k IDs (0.0029% of keyspace)</li>
+<li>❌ <strong>Still sequential</strong>: Codes remain predictable within a range</li>
+</ul>
+<p>The ID waste is negligible. With 3.5 trillion possible codes and 6 billion needed, losing 100k per crash doesn’t matter.</p>
+<h3 id="approach-4-range-based-counter--bit-shuffling-recommended">Approach 4: Range-Based Counter + Bit-Shuffling (Recommended)</h3>
+<p>Combine range allocation with bit manipulation to solve both availability and security.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> generate_short_code</span><span style="color:#E1E4E8">() -> </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span></span>
+<span class="line"><span style="color:#9ECBFF">    Production-ready ID generation:</span></span>
+<span class="line"><span style="color:#9ECBFF">    1. Get ID from local range (no coordination, SPOF eliminated)</span></span>
+<span class="line"><span style="color:#9ECBFF">    2. Shuffle bits for unpredictability (security)</span></span>
+<span class="line"><span style="color:#9ECBFF">    3. Encode base62 (URL-safe)</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span></span>
+<span class="line"><span style="color:#E1E4E8">    counter_id </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> range_allocator.get_next_id()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Bit shuffling: interleave with timestamp and server ID</span></span>
+<span class="line"><span style="color:#6A737D">    # This makes sequential IDs appear random</span></span>
+<span class="line"><span style="color:#E1E4E8">    timestamp_bits </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> int</span><span style="color:#E1E4E8">(time.time()) </span><span style="color:#F97583">&#x26;</span><span style="color:#F97583"> 0x</span><span style="color:#79B8FF">FFFF</span><span style="color:#6A737D">  # 16 bits</span></span>
+<span class="line"><span style="color:#E1E4E8">    server_bits </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> range_allocator.server_id </span><span style="color:#F97583">&#x26;</span><span style="color:#F97583"> 0x</span><span style="color:#79B8FF">FF</span><span style="color:#6A737D">  # 8 bits</span></span>
+<span class="line"><span style="color:#E1E4E8">    counter_bits </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> counter_id </span><span style="color:#F97583">&#x26;</span><span style="color:#F97583"> 0x</span><span style="color:#79B8FF">FFFFFFFFFF</span><span style="color:#6A737D">  # 40 bits</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Combine: [8b server | 16b timestamp | 40b counter] = 64 bits</span></span>
+<span class="line"><span style="color:#E1E4E8">    unique_id </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> (server_bits </span><span style="color:#F97583">&#x3C;&#x3C;</span><span style="color:#79B8FF"> 56</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">|</span><span style="color:#E1E4E8"> (timestamp_bits </span><span style="color:#F97583">&#x3C;&#x3C;</span><span style="color:#79B8FF"> 40</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">|</span><span style="color:#E1E4E8"> counter_bits</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # Optional: XOR with a secret key for additional unpredictability</span></span>
+<span class="line"><span style="color:#E1E4E8">    unique_id </span><span style="color:#F97583">^=</span><span style="color:#79B8FF"> SECRET_XOR_KEY</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> base62_encode(unique_id)[:</span><span style="color:#79B8FF">7</span><span style="color:#E1E4E8">]  </span><span style="color:#6A737D"># Truncate to 7 chars</span></span></code></pre>
+<p><strong>Trade-offs:</strong></p>
+<ul>
+<li>✅ <strong>Zero collisions</strong>: Counter guarantees uniqueness</li>
+<li>✅ <strong>No SPOF</strong>: Local range allocation, no coordination needed</li>
+<li>✅ <strong>Unpredictable</strong>: Bit shuffling + XOR makes codes appear random</li>
+<li>✅ <strong>Fast</strong>: Pure in-memory computation, no network calls</li>
+<li>✅ <strong>Debuggable</strong>: Server ID embedded (useful when investigating issues)</li>
+<li>✅ <strong>Time-sortable</strong>: Timestamp component enables range queries</li>
+</ul>
+<p><strong>Why not UUIDs?</strong> UUIDs are 128 bits, which is overkill for this use case. Even truncated to 7 characters, they have collision probability. The counter-based approach gives deterministic uniqueness with better performance and built-in debugging metadata.</p>
+<h3 id="recommendation">Recommendation</h3>
+<p>Use <strong>Approach 4</strong> (range-based counter + bit shuffling) for production:</p>
+<ul>
+<li>Solves availability (no SPOF)</li>
+<li>Solves security (unpredictable codes)</li>
+<li>Solves collisions (deterministic uniqueness)</li>
+<li>Enables debugging (server ID embedded)</li>
+</ul>
+<p>This approach satisfies all four requirements without exotic infrastructure.</p>
+<h2 id="database-design-choosing-the-right-storage">Database Design: Choosing the Right Storage</h2>
+<p>Storage is where many candidates stumble. You need different databases for different access patterns.</p>
+<h3 id="analyze-access-patterns-first">Analyze Access Patterns First</h3>
+<p><strong>URL Mappings:</strong></p>
+<ul>
+<li><strong>Writes</strong>: 40 QPS, need ACID transactions</li>
+<li><strong>Reads</strong>: 20k QPS, but 90% cached → 2k QPS hits DB</li>
+<li><strong>Query patterns</strong>: Point lookups by short_code, list by user_id + pagination</li>
+<li><strong>Consistency</strong>: Strong (can’t serve wrong URLs)</li>
+<li><strong>Relations</strong>: Users → URLs (need JOINs)</li>
+</ul>
+<p><strong>Analytics:</strong></p>
+<ul>
+<li><strong>Writes</strong>: 20k QPS, append-only, can be batched</li>
+<li><strong>Reads</strong>: Aggregations (count by day, GROUP BY country)</li>
+<li><strong>Consistency</strong>: Eventual (5-minute lag acceptable)</li>
+<li><strong>Relations</strong>: Minimal (mostly time-series queries)</li>
+</ul>
+<p>These patterns are fundamentally different and need different storage engines.</p>
+<h3 id="sql-vs-nosql-for-url-mappings">SQL vs NoSQL for URL Mappings</h3>
+<p>The NoSQL argument: “Simple key-value lookups, billions of records, so use Cassandra or DynamoDB.”</p>
+<p><strong>Why PostgreSQL is better here:</strong></p>
+<ol>
+<li>
+<p><strong>Transactions are essential</strong>: Creating a URL requires atomic operations:</p>
+<ul>
+<li>Insert into urls table</li>
+<li>Increment user’s quota counter</li>
+<li>Check rate limits</li>
+</ul>
+<p>NoSQL databases give up ACID for scale, but we don’t need that scale yet.</p>
+</li>
+<li>
+<p><strong>Secondary indexes matter</strong>: Need to query by:</p>
+<ul>
+<li><code>short_code</code> (primary lookup)</li>
+<li><code>user_id + created_at</code> (user’s URL list, paginated)</li>
+<li><code>expires_at</code> (TTL cleanup)</li>
+</ul>
+<p>Postgres handles these with indexes. Cassandra requires duplicate tables per query pattern.</p>
+</li>
+<li>
+<p><strong>Scale is manageable</strong>: 2k QPS reads on a single Postgres instance is trivial with:</p>
+<ul>
+<li>NVMe SSDs (100k+ IOPS)</li>
+<li>Proper indexes</li>
+<li>Connection pooling</li>
+</ul>
+<p>We’re nowhere near needing NoSQL’s write scalability (50k+ QPS).</p>
+</li>
+<li>
+<p><strong>Operational simplicity</strong>: Postgres replication is mature and well-understood. Tuning Cassandra’s consistency levels and handling eventual consistency bugs adds operational overhead.</p>
+</li>
+</ol>
+<p><strong>When to consider NoSQL</strong>: When writes exceed 50k QPS or a single Postgres shard can’t handle the load. Even then, shard Postgres first before switching to NoSQL.</p>
+<h3 id="schema-design">Schema Design</h3>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="sql"><code><span class="line"><span style="color:#6A737D">-- URLs table: Strong consistency, relational</span></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> TABLE</span><span style="color:#B392F0"> urls</span><span style="color:#E1E4E8"> (</span></span>
+<span class="line"><span style="color:#E1E4E8">    id </span><span style="color:#F97583">BIGINT</span><span style="color:#F97583"> PRIMARY KEY</span><span style="color:#E1E4E8">,  </span><span style="color:#6A737D">-- Pre-generated from range allocator</span></span>
+<span class="line"><span style="color:#E1E4E8">    short_code </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">7</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">UNIQUE</span><span style="color:#F97583"> NOT NULL</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    long_url </span><span style="color:#F97583">TEXT</span><span style="color:#F97583"> NOT NULL</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    user_id </span><span style="color:#F97583">BIGINT</span><span style="color:#F97583"> REFERENCES</span><span style="color:#E1E4E8"> users(id),</span></span>
+<span class="line"><span style="color:#E1E4E8">    created_at </span><span style="color:#F97583">TIMESTAMPTZ</span><span style="color:#F97583"> NOT NULL</span><span style="color:#F97583"> DEFAULT</span><span style="color:#F97583"> NOW</span><span style="color:#E1E4E8">(),</span></span>
+<span class="line"><span style="color:#E1E4E8">    expires_at </span><span style="color:#F97583">TIMESTAMPTZ</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    is_active </span><span style="color:#F97583">BOOLEAN</span><span style="color:#F97583"> DEFAULT</span><span style="color:#E1E4E8"> true,</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    -- Indexes for different access patterns</span></span>
+<span class="line"><span style="color:#F97583">    CONSTRAINT</span><span style="color:#E1E4E8"> short_code_valid </span><span style="color:#F97583">CHECK</span><span style="color:#E1E4E8"> (short_code ~ </span><span style="color:#9ECBFF">'^[a-zA-Z0-9]{7}$'</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">);</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> UNIQUE INDEX</span><span style="color:#B392F0"> idx_short_code</span><span style="color:#F97583"> ON</span><span style="color:#E1E4E8"> urls(short_code) </span><span style="color:#F97583">WHERE</span><span style="color:#E1E4E8"> is_active </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> true;</span></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> INDEX</span><span style="color:#B392F0"> idx_user_created</span><span style="color:#F97583"> ON</span><span style="color:#E1E4E8"> urls(user_id, created_at </span><span style="color:#F97583">DESC</span><span style="color:#E1E4E8">);</span></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> INDEX</span><span style="color:#B392F0"> idx_expires</span><span style="color:#F97583"> ON</span><span style="color:#E1E4E8"> urls(expires_at) </span><span style="color:#F97583">WHERE</span><span style="color:#E1E4E8"> expires_at </span><span style="color:#F97583">IS NOT NULL</span><span style="color:#E1E4E8">;</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">-- Users table</span></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> TABLE</span><span style="color:#B392F0"> users</span><span style="color:#E1E4E8"> (</span></span>
+<span class="line"><span style="color:#E1E4E8">    id </span><span style="color:#F97583">BIGSERIAL</span><span style="color:#F97583"> PRIMARY KEY</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    email </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">255</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">UNIQUE</span><span style="color:#F97583"> NOT NULL</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    api_key </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">64</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">UNIQUE</span><span style="color:#F97583"> NOT NULL</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    tier </span><span style="color:#F97583">VARCHAR</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">20</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">DEFAULT</span><span style="color:#9ECBFF"> 'free'</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    url_quota </span><span style="color:#F97583">INT</span><span style="color:#F97583"> DEFAULT</span><span style="color:#79B8FF"> 100</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    urls_created </span><span style="color:#F97583">INT</span><span style="color:#F97583"> DEFAULT</span><span style="color:#79B8FF"> 0</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    created_at </span><span style="color:#F97583">TIMESTAMPTZ</span><span style="color:#F97583"> DEFAULT</span><span style="color:#F97583"> NOW</span><span style="color:#E1E4E8">()</span></span>
+<span class="line"><span style="color:#E1E4E8">);</span></span></code></pre>
+<p><strong>Key optimizations:</strong></p>
+<ul>
+<li>Partial index on <code>is_active</code> - only index active URLs</li>
+<li>Composite index on <code>(user_id, created_at DESC)</code> - efficient pagination</li>
+<li>Partial index on <code>expires_at</code> - only index URLs with TTL</li>
+</ul>
+<h3 id="analytics-storage-time-series-database">Analytics Storage: Time-Series Database</h3>
+<p>For analytics, use ClickHouse (or TimescaleDB) instead of Postgres:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="sql"><code><span class="line"><span style="color:#6A737D">-- ClickHouse schema (columnar storage)</span></span>
+<span class="line"><span style="color:#F97583">CREATE</span><span style="color:#F97583"> TABLE</span><span style="color:#B392F0"> clicks</span><span style="color:#E1E4E8"> (</span></span>
+<span class="line"><span style="color:#E1E4E8">    short_code FixedString(</span><span style="color:#79B8FF">7</span><span style="color:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#E1E4E8">    clicked_at </span><span style="color:#F97583">DateTime</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    ip_address IPv6,</span></span>
+<span class="line"><span style="color:#E1E4E8">    country_code FixedString(</span><span style="color:#79B8FF">2</span><span style="color:#E1E4E8">),</span></span>
+<span class="line"><span style="color:#E1E4E8">    city String,</span></span>
+<span class="line"><span style="color:#E1E4E8">    device_type LowCardinality(String),  </span><span style="color:#6A737D">-- Enum-like compression</span></span>
+<span class="line"><span style="color:#E1E4E8">    referrer String,</span></span>
+<span class="line"><span style="color:#E1E4E8">    user_agent String</span></span>
+<span class="line"><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">ENGINE </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> MergeTree()</span></span>
+<span class="line"><span style="color:#F97583">PARTITION</span><span style="color:#F97583"> BY</span><span style="color:#E1E4E8"> toYYYYMM(clicked_at)  </span><span style="color:#6A737D">-- Monthly partitions</span></span>
+<span class="line"><span style="color:#F97583">ORDER BY</span><span style="color:#E1E4E8"> (short_code, clicked_at);</span></span></code></pre>
+<p><strong>ClickHouse advantages:</strong></p>
+<ol>
+<li><strong>Compression</strong>: 10:1 ratio vs Postgres (300TB → 30TB)</li>
+<li><strong>Query speed</strong>: Columnar storage makes <code>GROUP BY country_code</code> 50x faster</li>
+<li><strong>Partitioning</strong>: Old partitions moved to S3 automatically (cost savings)</li>
+<li><strong>Write throughput</strong>: Handles 100k inserts/sec with batching</li>
+</ol>
+<p><strong>Cost comparison:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Postgres (row storage):</span></span>
+<span class="line"><span>- 300TB × $0.10/GB = $30k/month</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>ClickHouse (columnar + S3):</span></span>
+<span class="line"><span>- 30TB SSD × $0.10/GB = $3k/month</span></span>
+<span class="line"><span>- 270TB S3 × $0.023/GB = $6.2k/month</span></span>
+<span class="line"><span>- Total: $9.2k/month</span></span>
+<span class="line"><span>- Savings: $20.8k/month</span></span></code></pre>
+<h3 id="when-to-shard">When to Shard</h3>
+<p>Shard Postgres when:</p>
+<ul>
+<li>Single instance hits <strong>20k write QPS</strong>, or</li>
+<li>Storage exceeds <strong>20TB per instance</strong></li>
+</ul>
+<p>For our scale (40 QPS writes, 6B URLs), a single instance handles everything comfortably. But here’s how sharding works when you need it:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#79B8FF">SHARD_COUNT</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> 16</span><span style="color:#6A737D">  # Power of 2 for consistent hashing</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">def</span><span style="color:#B392F0"> get_shard_id</span><span style="color:#E1E4E8">(short_code: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">) -> </span><span style="color:#79B8FF">int</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span></span>
+<span class="line"><span style="color:#9ECBFF">    Consistent hashing by short_code</span></span>
+<span class="line"><span style="color:#9ECBFF">    - Even distribution (hash randomness)</span></span>
+<span class="line"><span style="color:#9ECBFF">    - Deterministic routing (same code → same shard)</span></span>
+<span class="line"><span style="color:#9ECBFF">    - No hotspots (codes are randomly distributed)</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#79B8FF"> int</span><span style="color:#E1E4E8">(hashlib.sha256(short_code.encode()).hexdigest()[:</span><span style="color:#79B8FF">8</span><span style="color:#E1E4E8">], </span><span style="color:#79B8FF">16</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">%</span><span style="color:#79B8FF"> SHARD_COUNT</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Shard routing</span></span>
+<span class="line"><span style="color:#E1E4E8">shard_id </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> get_shard_id(</span><span style="color:#9ECBFF">"aB3xY9z"</span><span style="color:#E1E4E8">)  </span><span style="color:#6A737D"># Always routes to same shard</span></span>
+<span class="line"><span style="color:#E1E4E8">db_connection </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> db_pool.get_connection(</span><span style="color:#F97583">f</span><span style="color:#9ECBFF">"postgres-shard-</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">shard_id</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">"</span><span style="color:#E1E4E8">)</span></span></code></pre>
+<p>Each shard holds ~375M URLs (6B ÷ 16). Run leader-follower replication per shard for read scaling and high availability.</p>
+<h2 id="high-level-architecture">High-Level Architecture</h2>
+<p>The architecture separates read and write paths since they have very different characteristics (writes: 40 QPS, reads: 20k QPS).</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>                              ┌─────────────────────────┐</span></span>
+<span class="line"><span>                              │   CloudFlare CDN/WAF    │</span></span>
+<span class="line"><span>                              │  - DDoS protection      │</span></span>
+<span class="line"><span>                              │  - Rate limiting        │</span></span>
+<span class="line"><span>                              │  - Static edge cache    │</span></span>
+<span class="line"><span>                              └────────┬────────────────┘</span></span>
+<span class="line"><span>                                       │</span></span>
+<span class="line"><span>                              ┌────────▼─────────┐</span></span>
+<span class="line"><span>                              │  Global Load     │</span></span>
+<span class="line"><span>                              │  Balancer (AWS   │</span></span>
+<span class="line"><span>                              │  ALB/CloudFlare) │</span></span>
+<span class="line"><span>                              └────────┬─────────┘</span></span>
+<span class="line"><span>                                       │</span></span>
+<span class="line"><span>              ┌────────────────────────┼────────────────────────┐</span></span>
+<span class="line"><span>              │                        │                        │</span></span>
+<span class="line"><span>         ┌────▼────┐            ┌─────▼─────┐          ┌──────▼──────┐</span></span>
+<span class="line"><span>         │ App Pod │            │  App Pod  │          │   App Pod   │</span></span>
+<span class="line"><span>         │ (US-E)  │            │  (US-W)   │          │    (EU)     │</span></span>
+<span class="line"><span>         │ Stateless│           │ Stateless │          │  Stateless  │</span></span>
+<span class="line"><span>         └────┬────┘            └─────┬─────┘          └──────┬──────┘</span></span>
+<span class="line"><span>              │                       │                        │</span></span>
+<span class="line"><span>         ┌────▼─────────────┐   ┌────▼───────────┐      ┌────▼─────────┐</span></span>
+<span class="line"><span>         │ Redis Cluster    │   │ Redis Cluster  │      │Redis Cluster │</span></span>
+<span class="line"><span>         │ (Regional cache) │   │ (Regional)     │      │ (Regional)   │</span></span>
+<span class="line"><span>         │ 1TB, LRU evict   │   │ 1TB            │      │ 1TB          │</span></span>
+<span class="line"><span>         └──────────────────┘   └────────────────┘      └──────────────┘</span></span>
+<span class="line"><span>                          │            │             │</span></span>
+<span class="line"><span>                          └────────────┼─────────────┘</span></span>
+<span class="line"><span>                                       │</span></span>
+<span class="line"><span>                          ┌────────────▼────────────┐</span></span>
+<span class="line"><span>                          │  PostgreSQL Primary     │</span></span>
+<span class="line"><span>                          │  Multi-Region replicas  │</span></span>
+<span class="line"><span>                          │  (Sharded: 16 shards)   │</span></span>
+<span class="line"><span>                          └────────────┬────────────┘</span></span>
+<span class="line"><span>                                       │</span></span>
+<span class="line"><span>           ┌───────────────────────────┼────────────────────┐</span></span>
+<span class="line"><span>           │                           │                    │</span></span>
+<span class="line"><span>      ┌────▼────┐               ┌──────▼──────┐      ┌─────▼──────┐</span></span>
+<span class="line"><span>      │ Kafka   │               │  ClickHouse │      │  S3 (Cold  │</span></span>
+<span class="line"><span>      │ Stream  │──────────────▶│  Analytics  │◀─────│  Storage)  │</span></span>
+<span class="line"><span>      │ (Async) │               │   Cluster   │      │            │</span></span>
+<span class="line"><span>      └─────────┘               └─────────────┘      └────────────┘</span></span></code></pre>
+<h3 id="write-path-url-creation">Write Path (URL Creation)</h3>
+<p>The write path prioritizes durability over speed. At 40 QPS, we can afford synchronous database writes.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>POST /api/shorten</span></span>
+<span class="line"><span>{</span></span>
+<span class="line"><span>  "long_url": "https://example.com/very/long/url",</span></span>
+<span class="line"><span>  "custom_alias": "mylink"  // optional</span></span>
+<span class="line"><span>}</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Flow:</span></span>
+<span class="line"><span>1. [App Server] Authenticate user (JWT/API key)</span></span>
+<span class="line"><span>   - Check rate limit: 100 URLs/hour for free tier</span></span>
+<span class="line"><span>   - Fail fast if over quota</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>2. [App Server] Validate URL</span></span>
+<span class="line"><span>   - Check format (not malware/phishing)</span></span>
+<span class="line"><span>   - Query Google Safe Browsing API (async, 50ms timeout)</span></span>
+<span class="line"><span>   - Block if flagged as malicious</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>3. [App Server] Generate short code</span></span>
+<span class="line"><span>   - range_allocator.get_next_id() → local, no network call</span></span>
+<span class="line"><span>   - Bit shuffle + base62 encode → "aB3xY9z"</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>4. [Database] Transactional write to Postgres</span></span>
+<span class="line"><span>   BEGIN TRANSACTION;</span></span>
+<span class="line"><span>     INSERT INTO urls (id, short_code, long_url, user_id, created_at)</span></span>
+<span class="line"><span>       VALUES (...);</span></span>
+<span class="line"><span>     UPDATE users SET urls_created = urls_created + 1 WHERE id = ?;</span></span>
+<span class="line"><span>   COMMIT;</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>   Latency: ~10ms local replica, ~50ms cross-region</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>5. [Cache] Proactive cache write (fire-and-forget)</span></span>
+<span class="line"><span>   - redis.setex(f"url:{short_code}", 86400, long_url)</span></span>
+<span class="line"><span>   - If Redis fails, log error but don't fail request</span></span>
+<span class="line"><span>   - Cache populated on first read anyway</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>6. [Response] Return short URL immediately</span></span>
+<span class="line"><span>   {</span></span>
+<span class="line"><span>     "short_url": "https://short.ly/aB3xY9z",</span></span>
+<span class="line"><span>     "created_at": "2026-01-07T10:30:00Z"</span></span>
+<span class="line"><span>   }</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Total latency: ~80ms (p50), ~150ms (p99)</span></span></code></pre>
+<p><strong>Why database before cache?</strong> Durability over speed. If we cache first and the database write fails, users get 404s on redirect. At 40 QPS, the database handles writes easily, so caching doesn’t help on the write path.</p>
+<h3 id="read-path-redirect">Read Path (Redirect)</h3>
+<p>The read path is where the system is tested. At 20k QPS, it needs aggressive optimization. The goal is &#x3C;100ms latency globally.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>GET /aB3xY9z</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Flow:</span></span>
+<span class="line"><span>1. [CDN] CloudFlare edge cache (200+ PoPs globally)</span></span>
+<span class="line"><span>   - Cache-Control: public, max-age=300 (5 minutes)</span></span>
+<span class="line"><span>   - 80% of requests served from edge</span></span>
+<span class="line"><span>   - Latency: 10-20ms (CDN → user)</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>   If CDN miss (cold start or cache expiry):</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>2. [Load Balancer] Route to nearest region (US-E, US-W, EU)</span></span>
+<span class="line"><span>   - Geo-routing: EU users → EU app servers</span></span>
+<span class="line"><span>   - Latency: +15ms network hop</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>3. [App Server] Check Redis cache (regional cluster)</span></span>
+<span class="line"><span>   GET url:aB3xY9z</span></span>
+<span class="line"><span>   - Cache hit (90% after CDN misses): ~1ms</span></span>
+<span class="line"><span>   - Cache miss (10%): proceed to database</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>4. [Database] Query Postgres replica (read-only)</span></span>
+<span class="line"><span>   - Route to nearest read replica</span></span>
+<span class="line"><span>   - SELECT long_url, expires_at FROM urls WHERE short_code = ? AND is_active = true;</span></span>
+<span class="line"><span>   - Latency: ~5ms local, ~100ms cross-region</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>5. [Cache] Write-through to Redis (async)</span></span>
+<span class="line"><span>   - redis.setex(f"url:{short_code}", 86400, long_url)</span></span>
+<span class="line"><span>   - Don't block response</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>6. [Response] 302 Redirect immediately</span></span>
+<span class="line"><span>   HTTP/1.1 302 Found</span></span>
+<span class="line"><span>   Location: https://example.com/very/long/url</span></span>
+<span class="line"><span>   Cache-Control: public, max-age=300</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>7. [Analytics] Async event to Kafka (fire-and-forget)</span></span>
+<span class="line"><span>   - kafka.produce("clicks", {short_code, timestamp, ip, user_agent, ...})</span></span>
+<span class="line"><span>   - Does NOT block redirect</span></span>
+<span class="line"><span>   - If Kafka down, log to local buffer</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Latency breakdown:</span></span>
+<span class="line"><span>- CDN hit (80%): 10-20ms</span></span>
+<span class="line"><span>- Redis hit (18%): 30-50ms</span></span>
+<span class="line"><span>- DB hit (2%): 80-120ms</span></span>
+<span class="line"><span>- p99: &#x3C;100ms ✅</span></span></code></pre>
+<p><strong>Multi-layer caching:</strong> CDN (edge) → Redis (regional) → Database. Each layer reduces load on the next by 80-90%.</p>
+<h2 id="cap-theorem-and-caching-strategy">CAP Theorem and Caching Strategy</h2>
+<h3 id="choosing-availability-over-consistency">Choosing Availability Over Consistency</h3>
+<p>In CAP theorem, network partitions will happen, forcing you to choose between Consistency and Availability. For URL shorteners, <strong>choose Availability (AP system)</strong>.</p>
+<p><strong>Why favor availability:</strong></p>
+<ol>
+<li>
+<p><strong>Stale reads are tolerable</strong>: If a user updates a URL and it takes 5 minutes to propagate to all caches, that’s annoying but not catastrophic. Blocking all redirects during database unavailability is worse.</p>
+</li>
+<li>
+<p><strong>URLs are mostly immutable</strong>: 99% of URLs never change after creation. The rare edit cases can tolerate eventual consistency.</p>
+</li>
+<li>
+<p><strong>Expiration isn’t critical</strong>: If an expired URL is cached for 5 extra minutes, it’s a UX annoyance, not a security breach.</p>
+</li>
+</ol>
+<h3 id="cache-invalidation-strategy">Cache Invalidation Strategy</h3>
+<p>Despite choosing availability, aggressively invalidate caches on writes:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">async</span><span style="color:#F97583"> def</span><span style="color:#B392F0"> update_url</span><span style="color:#E1E4E8">(short_code: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">, new_long_url: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#9ECBFF">    """Update URL and aggressively invalidate caches"""</span></span>
+<span class="line"><span style="color:#6A737D">    # 1. Update database (source of truth)</span></span>
+<span class="line"><span style="color:#F97583">    await</span><span style="color:#E1E4E8"> db.execute(</span></span>
+<span class="line"><span style="color:#9ECBFF">        "UPDATE urls SET long_url = ?, updated_at = NOW() WHERE short_code = ?"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">        new_long_url, short_code</span></span>
+<span class="line"><span style="color:#E1E4E8">    )</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # 2. Invalidate all cache layers (best effort)</span></span>
+<span class="line"><span style="color:#F97583">    await</span><span style="color:#E1E4E8"> asyncio.gather(</span></span>
+<span class="line"><span style="color:#E1E4E8">        redis.delete(</span><span style="color:#F97583">f</span><span style="color:#9ECBFF">"url:</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">short_code</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">"</span><span style="color:#E1E4E8">),  </span><span style="color:#6A737D"># Redis</span></span>
+<span class="line"><span style="color:#E1E4E8">        cdn.purge_cache(</span><span style="color:#F97583">f</span><span style="color:#9ECBFF">"/</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">short_code</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">"</span><span style="color:#E1E4E8">),  </span><span style="color:#6A737D"># CloudFlare edge</span></span>
+<span class="line"><span style="color:#FFAB70">        return_exceptions</span><span style="color:#F97583">=</span><span style="color:#79B8FF">True</span><span style="color:#6A737D">  # Don't fail if purge fails</span></span>
+<span class="line"><span style="color:#E1E4E8">    )</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # 3. Wait 10 seconds for cache propagation before returning success</span></span>
+<span class="line"><span style="color:#F97583">    await</span><span style="color:#E1E4E8"> asyncio.sleep(</span><span style="color:#79B8FF">10</span><span style="color:#E1E4E8">)</span></span></code></pre>
+<p>For deletes/deactivations, use cache tombstones instead of simple deletion:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">async</span><span style="color:#F97583"> def</span><span style="color:#B392F0"> deactivate_url</span><span style="color:#E1E4E8">(short_code: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#9ECBFF">    """Deactivate URL with cache tombstone"""</span></span>
+<span class="line"><span style="color:#6A737D">    # 1. Soft delete in DB</span></span>
+<span class="line"><span style="color:#F97583">    await</span><span style="color:#E1E4E8"> db.execute(</span></span>
+<span class="line"><span style="color:#9ECBFF">        "UPDATE urls SET is_active = false WHERE short_code = ?"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">        short_code</span></span>
+<span class="line"><span style="color:#E1E4E8">    )</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # 2. Write tombstone to cache (instead of deleting)</span></span>
+<span class="line"><span style="color:#6A737D">    # TTL = 7 days (longer than cache's normal 24h TTL)</span></span>
+<span class="line"><span style="color:#F97583">    await</span><span style="color:#E1E4E8"> redis.setex(</span><span style="color:#F97583">f</span><span style="color:#9ECBFF">"url:</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">short_code</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">"</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">604800</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">"__TOMBSTONE__"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">    # This ensures deactivated URLs return 404 immediately</span></span></code></pre>
+<h3 id="multi-layer-caching-strategy">Multi-Layer Caching Strategy</h3>
+<p>Use three cache layers with different TTLs:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Layer 1: CDN Edge Cache (CloudFlare)</span></span>
+<span class="line"><span>- TTL: 5 minutes</span></span>
+<span class="line"><span>- Coverage: 80% of requests</span></span>
+<span class="line"><span>- Invalidation: Purge API (eventual, ~30 seconds)</span></span>
+<span class="line"><span>- Cost: ~$0.10 per million requests</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Layer 2: Regional Redis (US-E, US-W, EU)</span></span>
+<span class="line"><span>- TTL: 24 hours</span></span>
+<span class="line"><span>- Coverage: 18% of requests (CDN misses)</span></span>
+<span class="line"><span>- Invalidation: Immediate (delete key)</span></span>
+<span class="line"><span>- Cost: ~$0.50/GB/month × 3 regions</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Layer 3: Database Read Replicas</span></span>
+<span class="line"><span>- TTL: Infinite (source of truth)</span></span>
+<span class="line"><span>- Coverage: 2% of requests (cache misses)</span></span>
+<span class="line"><span>- Latency: 5-100ms depending on region</span></span></code></pre>
+<h3 id="handling-viral-links-high-fan-out-traffic">Handling Viral Links (High Fan-Out Traffic)</h3>
+<p>Viral links create sudden traffic spikes (10k+ requests/sec for a single URL). Handle them with adaptive caching:</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> AdaptiveCaching</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#9ECBFF">    """Increase cache TTL for hot links"""</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    async</span><span style="color:#F97583"> def</span><span style="color:#B392F0"> get_with_adaptive_ttl</span><span style="color:#E1E4E8">(self, short_code: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#6A737D">        # Check hit count in last minute (stored in Redis sorted set)</span></span>
+<span class="line"><span style="color:#E1E4E8">        hits_per_minute </span><span style="color:#F97583">=</span><span style="color:#F97583"> await</span><span style="color:#E1E4E8"> redis.zcount(</span></span>
+<span class="line"><span style="color:#F97583">            f</span><span style="color:#9ECBFF">"hits:</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">short_code</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">"</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">            time.time() </span><span style="color:#F97583">-</span><span style="color:#79B8FF"> 60</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">            time.time()</span></span>
+<span class="line"><span style="color:#E1E4E8">        )</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">        # Adaptive TTL based on traffic</span></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#E1E4E8"> hits_per_minute </span><span style="color:#F97583">></span><span style="color:#79B8FF"> 1000</span><span style="color:#E1E4E8">:  </span><span style="color:#6A737D"># Viral threshold</span></span>
+<span class="line"><span style="color:#E1E4E8">            ttl </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 3600</span><span style="color:#6A737D">  # 1 hour</span></span>
+<span class="line"><span style="color:#E1E4E8">            cdn_ttl </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 600</span><span style="color:#6A737D">  # 10 minutes CDN</span></span>
+<span class="line"><span style="color:#F97583">        elif</span><span style="color:#E1E4E8"> hits_per_minute </span><span style="color:#F97583">></span><span style="color:#79B8FF"> 100</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">            ttl </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 1800</span><span style="color:#6A737D">  # 30 minutes</span></span>
+<span class="line"><span style="color:#E1E4E8">            cdn_ttl </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 300</span><span style="color:#6A737D">  # 5 minutes CDN</span></span>
+<span class="line"><span style="color:#F97583">        else</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">            ttl </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 600</span><span style="color:#6A737D">  # 10 minutes (default)</span></span>
+<span class="line"><span style="color:#E1E4E8">            cdn_ttl </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> 60</span><span style="color:#6A737D">  # 1 minute CDN</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D">        # Cache with adaptive TTL</span></span>
+<span class="line"><span style="color:#F97583">        await</span><span style="color:#E1E4E8"> redis.setex(</span><span style="color:#F97583">f</span><span style="color:#9ECBFF">"url:</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">short_code</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">"</span><span style="color:#E1E4E8">, ttl, long_url)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> long_url, cdn_ttl</span></span></code></pre>
+<p>With adaptive caching, a viral link getting 10k requests/sec is served almost entirely from CDN edge. The 30-second CDN cache propagation delay is acceptable for viral content.</p>
+<h3 id="ttl-and-data-lifecycle-management">TTL and Data Lifecycle Management</h3>
+<p>Link expiration requires two strategies: lazy expiration at read time, and background cleanup for storage reclamation.</p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#6A737D"># Strategy 1: Lazy expiration at read time</span></span>
+<span class="line"><span style="color:#F97583">async</span><span style="color:#F97583"> def</span><span style="color:#B392F0"> get_url</span><span style="color:#E1E4E8">(short_code: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#9ECBFF">    """Check expiration on every read"""</span></span>
+<span class="line"><span style="color:#E1E4E8">    url_data </span><span style="color:#F97583">=</span><span style="color:#F97583"> await</span><span style="color:#E1E4E8"> cache_or_db_fetch(short_code)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    if</span><span style="color:#E1E4E8"> url_data.expires_at </span><span style="color:#F97583">and</span><span style="color:#E1E4E8"> url_data.expires_at </span><span style="color:#F97583">&#x3C;</span><span style="color:#E1E4E8"> time.time():</span></span>
+<span class="line"><span style="color:#6A737D">        # Expired—return 404 and write tombstone</span></span>
+<span class="line"><span style="color:#F97583">        await</span><span style="color:#E1E4E8"> redis.setex(</span><span style="color:#F97583">f</span><span style="color:#9ECBFF">"url:</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">short_code</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">"</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">86400</span><span style="color:#E1E4E8">, </span><span style="color:#9ECBFF">"__EXPIRED__"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> None</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    return</span><span style="color:#E1E4E8"> url_data.long_url</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#6A737D"># Strategy 2: Background cleanup (monthly) for storage reclamation</span></span>
+<span class="line"><span style="color:#F97583">async</span><span style="color:#F97583"> def</span><span style="color:#B392F0"> cleanup_expired_urls</span><span style="color:#E1E4E8">():</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span></span>
+<span class="line"><span style="color:#9ECBFF">    Runs monthly via cron</span></span>
+<span class="line"><span style="color:#9ECBFF">    Deletes expired URLs to reclaim storage</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span></span>
+<span class="line"><span style="color:#E1E4E8">    deleted </span><span style="color:#F97583">=</span><span style="color:#F97583"> await</span><span style="color:#E1E4E8"> db.execute(</span><span style="color:#9ECBFF">"""</span></span>
+<span class="line"><span style="color:#9ECBFF">        DELETE FROM urls</span></span>
+<span class="line"><span style="color:#9ECBFF">        WHERE expires_at &#x3C; NOW() - INTERVAL '7 days'</span></span>
+<span class="line"><span style="color:#9ECBFF">        AND is_active = false</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#E1E4E8">    logger.info(</span><span style="color:#F97583">f</span><span style="color:#9ECBFF">"Cleaned up </span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">deleted</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF"> expired URLs"</span><span style="color:#E1E4E8">)</span></span></code></pre>
+<p><strong>Cost impact of TTL:</strong></p>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>Scenario: 50% of URLs have 30-day TTL (temporary campaign links)</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>Without TTL:</span></span>
+<span class="line"><span>- Storage: 6B URLs × 3KB = 18TB over 5 years</span></span>
+<span class="line"><span>- Cost: 18TB × $0.10/GB = $1,800/month</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>With TTL and cleanup:</span></span>
+<span class="line"><span>- Active URLs: ~500M (after expiration)</span></span>
+<span class="line"><span>- Storage: 500M × 3KB = 1.5TB</span></span>
+<span class="line"><span>- Cost: 1.5TB × $0.10/GB = $150/month</span></span>
+<span class="line"><span>- Savings: $1,650/month = $99k over 5 years</span></span></code></pre>
+<p>TTL is not just a feature. It is a cost optimization strategy.</p>
+<h2 id="wrapping-up-part-1">Wrapping Up Part 1</h2>
+<p>We’ve covered the high-level design fundamentals for a production URL shortener:</p>
+<ol>
+<li><strong>Requirements &#x26; Capacity Planning</strong> - Understanding scale drives every decision (read-heavy system → caching is mandatory)</li>
+<li><strong>Distributed ID Generation</strong> - Range-based counters + bit-shuffling solve availability, security, and uniqueness</li>
+<li><strong>Database Design</strong> - Separate storage strategies for URLs (Postgres) vs analytics (ClickHouse)</li>
+<li><strong>Architecture &#x26; Request Flows</strong> - Multi-region deployment with clear read/write path separation</li>
+<li><strong>Caching Strategy</strong> - Three-layer caching (CDN → Redis → DB) with adaptive TTLs for viral links</li>
+</ol>
+<p>This architecture handles <strong>10 billion redirects/month</strong> with &#x3C;100ms p99 latency globally, costs ~$29k/month, scales horizontally, and has no single points of failure.</p>
+<p><strong>In Part 2</strong>, we’ll dive into the implementation details that make this production-ready:</p>
+<ul>
+<li><strong>Analytics Pipeline</strong>: Kafka streaming, batching strategies, handling 20k events/sec without blocking redirects</li>
+<li><strong>Security Layers</strong>: Rate limiting, URL validation, abuse detection, incident response</li>
+<li><strong>Observability</strong>: Metrics, dashboards, alerting, distributed tracing, cost monitoring</li>
+</ul>
+<p>Stay tuned for Part 2, where we go from architecture to code.</p>
+<hr>
+<p><em>Want to discuss system design? Reach out on <a href="https://twitter.com/anudeepsamaiya">Twitter</a> or <a href="https://www.linkedin.com/in/anudeepsamaiya/">LinkedIn</a>. I love talking about distributed systems, caching strategies, and building for scale.</em></p> </div> <!-- Social Share Buttons --> <div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-800"> <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Share this post:</p> <div class="flex gap-3"> <a href="https://twitter.com/intent/tweet?text=URL%20Shortener%20System%20Design%20(Part%201)%3A%20High-Level%20Architecture&url=https%3A%2F%2Fanudeepsamaiya.github.io%2Fblog%2F2025-03-05-url-shortener-system-design-part1-hld%2F" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors" aria-label="Share on Twitter"> <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"> <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path> </svg>
+Twitter
+</a> <a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fanudeepsamaiya.github.io%2Fblog%2F2025-03-05-url-shortener-system-design-part1-hld%2F" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg transition-colors" aria-label="Share on LinkedIn"> <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"> <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"></path> </svg>
+LinkedIn
+</a> <a href="https://news.ycombinator.com/submitlink?u=https%3A%2F%2Fanudeepsamaiya.github.io%2Fblog%2F2025-03-05-url-shortener-system-design-part1-hld%2F&t=URL%20Shortener%20System%20Design%20(Part%201)%3A%20High-Level%20Architecture" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors" aria-label="Share on Hacker News"> <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"> <path d="M0 24V0h24v24H0zM6.951 5.896l4.112 7.708v5.064h1.583v-4.972l4.148-7.799h-1.749l-2.457 4.875c-.372.745-.688 1.434-.688 1.434s-.297-.708-.651-1.434L8.831 5.896h-1.88z"></path> </svg>
+HN
+</a> </div> </div> <!-- Tags at bottom --> <div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-800"> <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Tags:</p> <div class="flex flex-wrap gap-2"> <span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#system-design </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#url-shortener </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#distributed-systems </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#backend </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#architecture </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#interviews </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#hld </span> </div> </div> <section class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800"><h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+Related Posts
+</h2><div class="space-y-4"><a href="/blog/2024-06-23-building-a-url-shortener" class="block p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Building a URL Shortener That Scales</h3><p class="text-gray-600 dark:text-gray-400 text-sm mb-2">Designing and implementing a production-ready URL shortener with custom domains, analytics, and high availability.</p><div class="flex gap-2 flex-wrap"><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">system-design</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">url-shortener</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">distributed-systems</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">backend</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">architecture</span></div></a><a href="/blog/2023-05-12-system-design-interview-framework" class="block p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">How I Approach System Design Interviews: A Framework That Actually Works</h3><p class="text-gray-600 dark:text-gray-400 text-sm mb-2">The framework I use to tackle system design interviews, demonstrated through designing a URL shortener from requirements to scaling strategies.</p><div class="flex gap-2 flex-wrap"><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">system-design</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">interviews</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">architecture</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">backend</span></div></a><a href="/blog/2025-07-16-url-shortener-system-design-part2-lld" class="block p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">URL Shortener System Design (Part 2): Production Implementation Deep Dive</h3><p class="text-gray-600 dark:text-gray-400 text-sm mb-2">From architecture to code: implement production-grade analytics pipelines, security layers, and observability for URL shorteners. Complete with Kafka streaming, rate limiting, and monitoring.</p><div class="flex gap-2 flex-wrap"><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">system-design</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">url-shortener</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">distributed-systems</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">backend</span></div></a></div></section> <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800"> <a href="/blog" class="text-blue-600 dark:text-blue-400 hover:underline">
+← Back to all posts
+</a> </div> </article> <div class="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 py-8 mt-12"> <div class="max-w-4xl mx-auto px-4"> <div class="text-center mb-6"> <h2 class="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Let's Connect! 💬</h2> <p class="text-base text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
+Whether you're looking to hire, want to collaborate on a project, or just want to chat about tech—I'd love to hear from you!
+</p> </div> <div class="flex flex-col sm:flex-row items-center justify-center gap-6"> <astro-island uid="ZC9c4W" prefix="r1" component-url="/_astro/ContactForm.DeBm0i4w.js" component-export="default" renderer-url="/_astro/client.AE0akZX9.js" props="{}" ssr client="load" opts="{&quot;name&quot;:&quot;ContactForm&quot;,&quot;value&quot;:true}"></astro-island> <div class="flex items-center gap-4"> <div class="h-8 w-px bg-gray-300 dark:bg-gray-700 hidden sm:block"></div> <p class="text-gray-600 dark:text-gray-400 text-sm hidden sm:block">or find me on</p> </div> <div class="flex gap-4"> <a href="https://github.com/anudeepsamaiya" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="GitHub"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/github.svg" alt="GitHub" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://twitter.com/anudeepsamaiya" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="X (Twitter)"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/x.svg" alt="X (Twitter)" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://www.linkedin.com/in/anudeepsamaiya/" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="LinkedIn"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/linkedin.svg" alt="LinkedIn" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://stackoverflow.com/users/2079692/anudeep-samaiya" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="Stack Overflow"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/stackoverflow.svg" alt="Stack Overflow" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://leetcode.com/anudeepsamaiya/" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="LeetCode"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/leetcode.svg" alt="LeetCode" class="w-6 h-6 opacity-60 dark:invert"> </a> </div> </div> </div> </div>  </main> <footer class="py-6 px-4 border-t border-gray-200 dark:border-gray-800"> <div class="max-w-4xl mx-auto text-center text-gray-600 dark:text-gray-400 text-sm"> <p class="mb-2"> © 2018-2026 Anudeep Samaiya. All rights reserved. </p> <p>
+Code:
+<a href="https://github.com/anudeepsamaiya/anudeepsamaiya.github.io/blob/master/LICENSE" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline mx-1">
+MIT License
+</a>
+| Content:
+<a href="https://github.com/anudeepsamaiya/anudeepsamaiya.github.io/blob/master/LICENSE-CONTENT" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline mx-1">
+CC BY 4.0
+</a> </p> </div> </footer> </div> </body></html> 
