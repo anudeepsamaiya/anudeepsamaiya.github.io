@@ -1,0 +1,370 @@
+<!DOCTYPE html><html lang="en-US"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description" content="A low-level design walkthrough of WhatsApp covering message delivery states, per-recipient group tracking, store-and-forward for offline users, and the design decisions that make those two little ticks meaningful."><meta name="author" content="Anudeep Samaiya"><meta name="google-site-verification" content="twVFs_dUxCyldlt-Sif72GezMsXbI0wKJEVTBJ1A22g"><link rel="canonical" href="https://anudeepsamaiya.github.io/blog/2025-06-05-lld-whatsapp/"><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/site.webmanifest"><title>Design WhatsApp: Messages, Delivery Status, and Group Chats | Anudeep Samaiya</title><script>
+      // Initialize theme before page renders to prevent flash
+      (function() {
+        const theme = localStorage.getItem('theme') || 'light';
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script><link rel="stylesheet" href="/_astro/about.Cg2y2hoq.css">
+<style>.prose pre{overflow-x:auto}.prose pre:has(code:contains("┌")),.prose pre:has(code:contains("│")),.prose pre:has(code:contains("▶")),.prose pre:has(code:contains("└")){text-align:center;display:flex;justify-content:center}
+</style></head> <body class="bg-white dark:bg-gray-900"> <div class="min-h-screen flex flex-col"> <header class="py-6 px-4 border-b border-gray-200 dark:border-gray-800"> <nav class="max-w-4xl mx-auto flex justify-between items-center"> <a href="/" class="text-2xl font-bold text-gray-900 dark:text-white"> Anudeep Samaiya </a> <div class="flex items-center gap-6"> <ul class="flex gap-6"> <li> <a href="/about" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"> About </a> </li><li> <a href="/blog" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"> Blog </a> </li><li> <a href="/reading" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"> Reading </a> </li> </ul> <style>astro-island,astro-slot,astro-static-slot{display:contents}</style><script>(()=>{var e=async t=>{await(await t())()};(self.Astro||(self.Astro={})).load=e;window.dispatchEvent(new Event("astro:load"));})();</script><script>(()=>{var A=Object.defineProperty;var g=(i,o,a)=>o in i?A(i,o,{enumerable:!0,configurable:!0,writable:!0,value:a}):i[o]=a;var d=(i,o,a)=>g(i,typeof o!="symbol"?o+"":o,a);{let i={0:t=>m(t),1:t=>a(t),2:t=>new RegExp(t),3:t=>new Date(t),4:t=>new Map(a(t)),5:t=>new Set(a(t)),6:t=>BigInt(t),7:t=>new URL(t),8:t=>new Uint8Array(t),9:t=>new Uint16Array(t),10:t=>new Uint32Array(t),11:t=>1/0*t},o=t=>{let[l,e]=t;return l in i?i[l](e):void 0},a=t=>t.map(o),m=t=>typeof t!="object"||t===null?t:Object.fromEntries(Object.entries(t).map(([l,e])=>[l,o(e)]));class y extends HTMLElement{constructor(){super(...arguments);d(this,"Component");d(this,"hydrator");d(this,"hydrate",async()=>{var b;if(!this.hydrator||!this.isConnected)return;let e=(b=this.parentElement)==null?void 0:b.closest("astro-island[ssr]");if(e){e.addEventListener("astro:hydrate",this.hydrate,{once:!0});return}let c=this.querySelectorAll("astro-slot"),n={},h=this.querySelectorAll("template[data-astro-template]");for(let r of h){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("data-astro-template")||"default"]=r.innerHTML,r.remove())}for(let r of c){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("name")||"default"]=r.innerHTML)}let p;try{p=this.hasAttribute("props")?m(JSON.parse(this.getAttribute("props"))):{}}catch(r){let s=this.getAttribute("component-url")||"<unknown>",v=this.getAttribute("component-export");throw v&&(s+=` (export ${v})`),console.error(`[hydrate] Error parsing props for component ${s}`,this.getAttribute("props"),r),r}let u;await this.hydrator(this)(this.Component,p,n,{client:this.getAttribute("client")}),this.removeAttribute("ssr"),this.dispatchEvent(new CustomEvent("astro:hydrate"))});d(this,"unmount",()=>{this.isConnected||this.dispatchEvent(new CustomEvent("astro:unmount"))})}disconnectedCallback(){document.removeEventListener("astro:after-swap",this.unmount),document.addEventListener("astro:after-swap",this.unmount,{once:!0})}connectedCallback(){if(!this.hasAttribute("await-children")||document.readyState==="interactive"||document.readyState==="complete")this.childrenConnectedCallback();else{let e=()=>{document.removeEventListener("DOMContentLoaded",e),c.disconnect(),this.childrenConnectedCallback()},c=new MutationObserver(()=>{var n;((n=this.lastChild)==null?void 0:n.nodeType)===Node.COMMENT_NODE&&this.lastChild.nodeValue==="astro:end"&&(this.lastChild.remove(),e())});c.observe(this,{childList:!0}),document.addEventListener("DOMContentLoaded",e)}}async childrenConnectedCallback(){let e=this.getAttribute("before-hydration-url");e&&await import(e),this.start()}async start(){let e=JSON.parse(this.getAttribute("opts")),c=this.getAttribute("client");if(Astro[c]===void 0){window.addEventListener(`astro:${c}`,()=>this.start(),{once:!0});return}try{await Astro[c](async()=>{let n=this.getAttribute("renderer-url"),[h,{default:p}]=await Promise.all([import(this.getAttribute("component-url")),n?import(n):()=>()=>{}]),u=this.getAttribute("component-export")||"default";if(!u.includes("."))this.Component=h[u];else{this.Component=h;for(let f of u.split("."))this.Component=this.Component[f]}return this.hydrator=p,this.hydrate},e,this)}catch(n){console.error(`[astro-island] Error hydrating ${this.getAttribute("component-url")}`,n)}}attributeChangedCallback(){this.hydrate()}}d(y,"observedAttributes",["props"]),customElements.get("astro-island")||customElements.define("astro-island",y)}})();</script><astro-island uid="Z1WQ4OE" prefix="r0" component-url="/_astro/ThemeToggle.C_FMJT46.js" component-export="default" renderer-url="/_astro/client.AE0akZX9.js" props="{}" ssr client="load" opts="{&quot;name&quot;:&quot;ThemeToggle&quot;,&quot;value&quot;:true}" await-children><div class="w-9 h-9 p-2 rounded-lg bg-gray-100 dark:bg-gray-800"><div class="w-5 h-5"></div></div><!--astro:end--></astro-island> </div> </nav> </header> <main class="flex-1">  <article class="max-w-4xl mx-auto px-4 py-12"> <header class="mb-8"> <h1 class="text-4xl font-bold mb-4 text-gray-900 dark:text-white"> Design WhatsApp: Messages, Delivery Status, and Group Chats </h1> <div class="flex items-center gap-4 text-gray-600 dark:text-gray-400"> <time> June 5, 2025 </time> </div> </header> <div class="prose prose-lg dark:prose-invert max-w-none mb-12"> <p>The two grey ticks turning blue is one of the most recognizable UI signals in software. Everyone who uses WhatsApp understands exactly what it means. But when I reason through how to implement it, the deceptively simple question is: where does that state live and who is responsible for changing it?</p>
+<p>Your first instinct might be to put a <code>status</code> field on each <code>Message</code> and update it as the message progresses. Single-recipient chat is fine with that. Then you think through group messages. A message sent to a group of 10 people needs to be delivered to all 10 before you can show double ticks. Read receipts require that all 10 have opened the chat. If you store a single status on the message, you lose the per-recipient detail you need to compute the aggregate. You need a different model: one delivery record per recipient per message. That one insight reshapes most of the design.</p>
+<p>The second interesting problem is offline delivery. A user who has not opened WhatsApp in three days still gets your messages the moment they reconnect. The server has to hold messages until the recipient is available, then push them in order, and then update the sender’s UI with the delivery confirmation. This is the store-and-forward pattern, and building it correctly requires you to think about what “delivered” actually means: delivered to the device, or delivered to the server? WhatsApp chose server-plus-device, which is why you see a single grey tick the moment the server accepts your message.</p>
+<h2 id="requirements">Requirements</h2>
+<p><strong>Functional</strong></p>
+<ul>
+<li>Send text and media messages between users in one-to-one chats</li>
+<li>Support group chats with multiple recipients</li>
+<li>Track delivery state per message: SENT (server received), DELIVERED (device received), READ (user opened it)</li>
+<li>Deliver messages to offline users when they reconnect</li>
+<li>Notify the sender when delivery or read state changes</li>
+</ul>
+<p><strong>Non-functional</strong></p>
+<ul>
+<li>Delivery state updates must propagate in near-real-time when both parties are online</li>
+<li>The design must handle the group message case where different recipients reach READ at different times</li>
+<li>The design must preserve message ordering per chat</li>
+</ul>
+<h2 id="core-entities">Core Entities</h2>
+<p><strong><code>User</code></strong> holds identity and online status. Whether a user is currently connected determines whether messages can be pushed directly or queue for later delivery.</p>
+<p><strong><code>Message</code></strong> is an immutable record once created. It carries content, sender, timestamp, and a reference to the chat it belongs to. It does not carry a single status field. That job belongs to <code>MessageDeliveryRecord</code>.</p>
+<p><strong><code>MessageDeliveryRecord</code></strong> is the key entity most people miss in early designs. One record per (message, recipient) pair. It holds the individual delivery state for that recipient. Aggregating across all records for a message gives you the sender’s visible tick state.</p>
+<p><strong><code>TextMessage</code> and <code>MediaMessage</code></strong> extend <code>Message</code> through a class hierarchy. A <code>TextMessage</code> holds a string body. A <code>MediaMessage</code> holds a media URL and MIME type. The Factory pattern creates the right type based on what the sender submitted.</p>
+<p><strong><code>Chat</code></strong> represents a one-to-one conversation between two users. It owns an ordered list of messages and knows both participants.</p>
+<p><strong><code>Group</code></strong> represents a multi-party conversation. It owns its member list and a list of messages. When a sender sends a message to a group, the system creates one <code>MessageDeliveryRecord</code> for each member except the sender.</p>
+<p><strong><code>MessageQueue</code></strong> stores outbound messages for offline users. When a user comes online, the queue drains in order.</p>
+<p><strong><code>NotificationService</code></strong> pushes delivery state changes back to the original sender. It observes state changes on <code>MessageDeliveryRecord</code> and triggers sender notifications.</p>
+<h2 id="class-design">Class Design</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>+-------------------+       +-------------------------+</span></span>
+<span class="line"><span>|      User         |       |        Message          |</span></span>
+<span class="line"><span>|-------------------|       |-------------------------|</span></span>
+<span class="line"><span>| user_id: str      |       | message_id: str         |</span></span>
+<span class="line"><span>| display_name: str |       | sender: User            |</span></span>
+<span class="line"><span>| is_online: bool   |       | chat_id: str            |</span></span>
+<span class="line"><span>|                   |       | timestamp: datetime     |</span></span>
+<span class="line"><span>+-------------------+       | content_type: str       |</span></span>
+<span class="line"><span>                            +-------------------------+</span></span>
+<span class="line"><span>                                      ^</span></span>
+<span class="line"><span>                         +-----------+-----------+</span></span>
+<span class="line"><span>                         |                       |</span></span>
+<span class="line"><span>              +------------------+   +---------------------+</span></span>
+<span class="line"><span>              |   TextMessage    |   |    MediaMessage     |</span></span>
+<span class="line"><span>              |------------------|   |---------------------|</span></span>
+<span class="line"><span>              | body: str        |   | media_url: str      |</span></span>
+<span class="line"><span>              +------------------+   | mime_type: str      |</span></span>
+<span class="line"><span>                                     +---------------------+</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>+-----------------------------+</span></span>
+<span class="line"><span>|   MessageDeliveryRecord     |</span></span>
+<span class="line"><span>|-----------------------------|</span></span>
+<span class="line"><span>| record_id: str              |</span></span>
+<span class="line"><span>| message_id: str             |</span></span>
+<span class="line"><span>| recipient: User             |</span></span>
+<span class="line"><span>| state: DeliveryState        |</span></span>
+<span class="line"><span>| delivered_at: datetime|None |</span></span>
+<span class="line"><span>| read_at: datetime|None      |</span></span>
+<span class="line"><span>|-----------------------------|</span></span>
+<span class="line"><span>| mark_delivered()            |</span></span>
+<span class="line"><span>| mark_read()                 |</span></span>
+<span class="line"><span>+-----------------------------+</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>+-------------------+    +-------------------+</span></span>
+<span class="line"><span>|      Chat         |    |       Group       |</span></span>
+<span class="line"><span>|-------------------|    |-------------------|</span></span>
+<span class="line"><span>| chat_id: str      |    | group_id: str     |</span></span>
+<span class="line"><span>| participants[2]   |    | name: str         |</span></span>
+<span class="line"><span>| messages: list    |    | members: list     |</span></span>
+<span class="line"><span>|                   |    | messages: list    |</span></span>
+<span class="line"><span>+-------------------+    +-------------------+</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>+----------------------+    +------------------------+</span></span>
+<span class="line"><span>|    MessageQueue      |    |  NotificationService   |</span></span>
+<span class="line"><span>|----------------------|    |------------------------|</span></span>
+<span class="line"><span>| _queue: dict         |    | + notify_sender(...)   |</span></span>
+<span class="line"><span>| enqueue(user, msg)   |    | + on_state_change(...) |</span></span>
+<span class="line"><span>| drain(user)          |    +------------------------+</span></span>
+<span class="line"><span>+----------------------+</span></span></code></pre>
+<p>The relationship to understand: <code>MessageDeliveryRecord</code> is the bridge between <code>Message</code> and <code>User</code>. A message to a group of 5 produces 5 records. The sender-visible state comes from aggregating all records for that message and picking the minimum state (you only show blue ticks when all recipients have READ).</p>
+<h2 id="key-implementation">Key Implementation</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">from</span><span style="color:#79B8FF"> __future__</span><span style="color:#F97583"> import</span><span style="color:#E1E4E8"> annotations</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> uuid</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> dataclasses </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> dataclass, field</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> datetime </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> datetime</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> enum </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> Enum, auto</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> typing </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> Callable, Optional</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> DeliveryState</span><span style="color:#E1E4E8">(</span><span style="color:#B392F0">Enum</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#79B8FF">    SENT</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> auto()       </span><span style="color:#6A737D"># server accepted the message</span></span>
+<span class="line"><span style="color:#79B8FF">    DELIVERED</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> auto()  </span><span style="color:#6A737D"># device received it</span></span>
+<span class="line"><span style="color:#79B8FF">    READ</span><span style="color:#F97583"> =</span><span style="color:#E1E4E8"> auto()       </span><span style="color:#6A737D"># user opened the chat</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> ContentType</span><span style="color:#E1E4E8">(</span><span style="color:#B392F0">Enum</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#79B8FF">    TEXT</span><span style="color:#F97583"> =</span><span style="color:#9ECBFF"> "text"</span></span>
+<span class="line"><span style="color:#79B8FF">    MEDIA</span><span style="color:#F97583"> =</span><span style="color:#9ECBFF"> "media"</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">@dataclass</span></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> User</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    user_id: </span><span style="color:#79B8FF">str</span></span>
+<span class="line"><span style="color:#E1E4E8">    display_name: </span><span style="color:#79B8FF">str</span></span>
+<span class="line"><span style="color:#E1E4E8">    is_online: </span><span style="color:#79B8FF">bool</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> False</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">@dataclass</span></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> Message</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    message_id: </span><span style="color:#79B8FF">str</span></span>
+<span class="line"><span style="color:#E1E4E8">    sender: User</span></span>
+<span class="line"><span style="color:#E1E4E8">    chat_id: </span><span style="color:#79B8FF">str</span></span>
+<span class="line"><span style="color:#E1E4E8">    timestamp: datetime</span></span>
+<span class="line"><span style="color:#E1E4E8">    content_type: ContentType</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">    @</span><span style="color:#79B8FF">staticmethod</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> new_id</span><span style="color:#E1E4E8">() -> </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> str</span><span style="color:#E1E4E8">(uuid.uuid4())</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">@dataclass</span></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> TextMessage</span><span style="color:#E1E4E8">(</span><span style="color:#B392F0">Message</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#E1E4E8">    body: </span><span style="color:#79B8FF">str</span><span style="color:#F97583"> =</span><span style="color:#9ECBFF"> ""</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">@dataclass</span></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> MediaMessage</span><span style="color:#E1E4E8">(</span><span style="color:#B392F0">Message</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#E1E4E8">    media_url: </span><span style="color:#79B8FF">str</span><span style="color:#F97583"> =</span><span style="color:#9ECBFF"> ""</span></span>
+<span class="line"><span style="color:#E1E4E8">    mime_type: </span><span style="color:#79B8FF">str</span><span style="color:#F97583"> =</span><span style="color:#9ECBFF"> ""</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> MessageFactory</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#B392F0">    @</span><span style="color:#79B8FF">staticmethod</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> create_text</span><span style="color:#E1E4E8">(sender: User, chat_id: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">, body: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">) -> TextMessage:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> TextMessage(</span></span>
+<span class="line"><span style="color:#FFAB70">            message_id</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">Message.new_id(),</span></span>
+<span class="line"><span style="color:#FFAB70">            sender</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">sender,</span></span>
+<span class="line"><span style="color:#FFAB70">            chat_id</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">chat_id,</span></span>
+<span class="line"><span style="color:#FFAB70">            timestamp</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">datetime.utcnow(),</span></span>
+<span class="line"><span style="color:#FFAB70">            content_type</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">ContentType.</span><span style="color:#79B8FF">TEXT</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#FFAB70">            body</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">body,</span></span>
+<span class="line"><span style="color:#E1E4E8">        )</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">    @</span><span style="color:#79B8FF">staticmethod</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> create_media</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#E1E4E8">        sender: User, chat_id: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">, media_url: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">, mime_type: </span><span style="color:#79B8FF">str</span></span>
+<span class="line"><span style="color:#E1E4E8">    ) -> MediaMessage:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> MediaMessage(</span></span>
+<span class="line"><span style="color:#FFAB70">            message_id</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">Message.new_id(),</span></span>
+<span class="line"><span style="color:#FFAB70">            sender</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">sender,</span></span>
+<span class="line"><span style="color:#FFAB70">            chat_id</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">chat_id,</span></span>
+<span class="line"><span style="color:#FFAB70">            timestamp</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">datetime.utcnow(),</span></span>
+<span class="line"><span style="color:#FFAB70">            content_type</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">ContentType.</span><span style="color:#79B8FF">MEDIA</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#FFAB70">            media_url</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">media_url,</span></span>
+<span class="line"><span style="color:#FFAB70">            mime_type</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">mime_type,</span></span>
+<span class="line"><span style="color:#E1E4E8">        )</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">@dataclass</span></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> MessageDeliveryRecord</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    record_id: </span><span style="color:#79B8FF">str</span></span>
+<span class="line"><span style="color:#E1E4E8">    message: Message</span></span>
+<span class="line"><span style="color:#E1E4E8">    recipient: User</span></span>
+<span class="line"><span style="color:#E1E4E8">    state: DeliveryState </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> DeliveryState.</span><span style="color:#79B8FF">SENT</span></span>
+<span class="line"><span style="color:#E1E4E8">    delivered_at: Optional[datetime] </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> None</span></span>
+<span class="line"><span style="color:#E1E4E8">    read_at: Optional[datetime] </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> None</span></span>
+<span class="line"><span style="color:#E1E4E8">    _on_change: list[Callable[[</span><span style="color:#9ECBFF">"MessageDeliveryRecord"</span><span style="color:#E1E4E8">], </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">]] </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> field(</span></span>
+<span class="line"><span style="color:#FFAB70">        default_factory</span><span style="color:#F97583">=</span><span style="color:#79B8FF">list</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">repr</span><span style="color:#F97583">=</span><span style="color:#79B8FF">False</span></span>
+<span class="line"><span style="color:#E1E4E8">    )</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> register_observer</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#E1E4E8">        self, callback: Callable[[</span><span style="color:#9ECBFF">"MessageDeliveryRecord"</span><span style="color:#E1E4E8">], </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">]</span></span>
+<span class="line"><span style="color:#E1E4E8">    ) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._on_change.append(callback)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> mark_delivered</span><span style="color:#E1E4E8">(self) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.state </span><span style="color:#F97583">==</span><span style="color:#E1E4E8"> DeliveryState.</span><span style="color:#79B8FF">SENT</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">            self</span><span style="color:#E1E4E8">.state </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> DeliveryState.</span><span style="color:#79B8FF">DELIVERED</span></span>
+<span class="line"><span style="color:#79B8FF">            self</span><span style="color:#E1E4E8">.delivered_at </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> datetime.utcnow()</span></span>
+<span class="line"><span style="color:#79B8FF">            self</span><span style="color:#E1E4E8">._notify()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> mark_read</span><span style="color:#E1E4E8">(self) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.state </span><span style="color:#F97583">!=</span><span style="color:#E1E4E8"> DeliveryState.</span><span style="color:#79B8FF">READ</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">            self</span><span style="color:#E1E4E8">.state </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> DeliveryState.</span><span style="color:#79B8FF">READ</span></span>
+<span class="line"><span style="color:#79B8FF">            self</span><span style="color:#E1E4E8">.read_at </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> datetime.utcnow()</span></span>
+<span class="line"><span style="color:#79B8FF">            self</span><span style="color:#E1E4E8">._notify()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> _notify</span><span style="color:#E1E4E8">(self) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        for</span><span style="color:#E1E4E8"> callback </span><span style="color:#F97583">in</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">._on_change:</span></span>
+<span class="line"><span style="color:#E1E4E8">            callback(</span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">    @</span><span style="color:#79B8FF">staticmethod</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> new</span><span style="color:#E1E4E8">(message: Message, recipient: User) -> </span><span style="color:#9ECBFF">"MessageDeliveryRecord"</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> MessageDeliveryRecord(</span></span>
+<span class="line"><span style="color:#FFAB70">            record_id</span><span style="color:#F97583">=</span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">(uuid.uuid4()),</span></span>
+<span class="line"><span style="color:#FFAB70">            message</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">message,</span></span>
+<span class="line"><span style="color:#FFAB70">            recipient</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">recipient,</span></span>
+<span class="line"><span style="color:#E1E4E8">        )</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> NotificationService</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span></span>
+<span class="line"><span style="color:#9ECBFF">    Observes delivery record state changes and pushes</span></span>
+<span class="line"><span style="color:#9ECBFF">    updates back to the original sender.</span></span>
+<span class="line"><span style="color:#9ECBFF">    In a real system this fires a WebSocket push or APNS/FCM notification.</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> on_state_change</span><span style="color:#E1E4E8">(self, record: MessageDeliveryRecord) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        sender </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> record.message.sender</span></span>
+<span class="line"><span style="color:#E1E4E8">        aggregate </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">._aggregate_state(record.message)</span></span>
+<span class="line"><span style="color:#79B8FF">        print</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#F97583">            f</span><span style="color:#9ECBFF">"[notify] </span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">sender.display_name</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">'s message </span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">record.message.message_id[:</span><span style="color:#79B8FF">8</span><span style="color:#E1E4E8">]</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF"> "</span></span>
+<span class="line"><span style="color:#F97583">            f</span><span style="color:#9ECBFF">"is now </span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">aggregate.name</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF"> for all recipients"</span></span>
+<span class="line"><span style="color:#E1E4E8">        )</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> _aggregate_state</span><span style="color:#E1E4E8">(self, message: Message) -> DeliveryState:</span></span>
+<span class="line"><span style="color:#6A737D">        # Caller is responsible for passing all records for this message.</span></span>
+<span class="line"><span style="color:#6A737D">        # Stubbed here; real implementation queries a repository.</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> DeliveryState.</span><span style="color:#79B8FF">DELIVERED</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> MessageQueue</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#9ECBFF">    """Store-and-forward queue for offline users."""</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#79B8FF"> __init__</span><span style="color:#E1E4E8">(self) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._queue: dict[</span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">, list[Message]] </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> {}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> enqueue</span><span style="color:#E1E4E8">(self, recipient: User, message: Message) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._queue.setdefault(recipient.user_id, []).append(message)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> drain</span><span style="color:#E1E4E8">(self, recipient: User) -> list[Message]:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">._queue.pop(recipient.user_id, [])</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">@dataclass</span></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> Chat</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    chat_id: </span><span style="color:#79B8FF">str</span></span>
+<span class="line"><span style="color:#E1E4E8">    participants: list[User]</span></span>
+<span class="line"><span style="color:#E1E4E8">    _messages: list[Message] </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> field(</span><span style="color:#FFAB70">default_factory</span><span style="color:#F97583">=</span><span style="color:#79B8FF">list</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">repr</span><span style="color:#F97583">=</span><span style="color:#79B8FF">False</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> add_message</span><span style="color:#E1E4E8">(self, message: Message) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._messages.append(message)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> messages</span><span style="color:#E1E4E8">(self) -> list[Message]:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> list</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">._messages)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> other_participant</span><span style="color:#E1E4E8">(self, sender: User) -> User:</span></span>
+<span class="line"><span style="color:#F97583">        for</span><span style="color:#E1E4E8"> p </span><span style="color:#F97583">in</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.participants:</span></span>
+<span class="line"><span style="color:#F97583">            if</span><span style="color:#E1E4E8"> p.user_id </span><span style="color:#F97583">!=</span><span style="color:#E1E4E8"> sender.user_id:</span></span>
+<span class="line"><span style="color:#F97583">                return</span><span style="color:#E1E4E8"> p</span></span>
+<span class="line"><span style="color:#F97583">        raise</span><span style="color:#79B8FF"> ValueError</span><span style="color:#E1E4E8">(</span><span style="color:#9ECBFF">"Sender is not a participant in this chat"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">@dataclass</span></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> Group</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    group_id: </span><span style="color:#79B8FF">str</span></span>
+<span class="line"><span style="color:#E1E4E8">    name: </span><span style="color:#79B8FF">str</span></span>
+<span class="line"><span style="color:#E1E4E8">    members: list[User]</span></span>
+<span class="line"><span style="color:#E1E4E8">    _messages: list[Message] </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> field(</span><span style="color:#FFAB70">default_factory</span><span style="color:#F97583">=</span><span style="color:#79B8FF">list</span><span style="color:#E1E4E8">, </span><span style="color:#FFAB70">repr</span><span style="color:#F97583">=</span><span style="color:#79B8FF">False</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> add_message</span><span style="color:#E1E4E8">(self, message: Message) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._messages.append(message)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> recipients_for</span><span style="color:#E1E4E8">(self, sender: User) -> list[User]:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> [m </span><span style="color:#F97583">for</span><span style="color:#E1E4E8"> m </span><span style="color:#F97583">in</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.members </span><span style="color:#F97583">if</span><span style="color:#E1E4E8"> m.user_id </span><span style="color:#F97583">!=</span><span style="color:#E1E4E8"> sender.user_id]</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> MessagingService</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span></span>
+<span class="line"><span style="color:#9ECBFF">    Orchestrates sending a message: creates delivery records,</span></span>
+<span class="line"><span style="color:#9ECBFF">    handles offline queuing, and wires up observer notifications.</span></span>
+<span class="line"><span style="color:#9ECBFF">    """</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#79B8FF"> __init__</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#E1E4E8">        self,</span></span>
+<span class="line"><span style="color:#E1E4E8">        queue: MessageQueue,</span></span>
+<span class="line"><span style="color:#E1E4E8">        notifications: NotificationService,</span></span>
+<span class="line"><span style="color:#E1E4E8">    ) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._queue </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> queue</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._notifications </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> notifications</span></span>
+<span class="line"><span style="color:#6A737D">        # In a real system, records are persisted to a database.</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._records: list[MessageDeliveryRecord] </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> []</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> send_to_chat</span><span style="color:#E1E4E8">(self, chat: Chat, message: Message) -> list[MessageDeliveryRecord]:</span></span>
+<span class="line"><span style="color:#E1E4E8">        recipient </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> chat.other_participant(message.sender)</span></span>
+<span class="line"><span style="color:#E1E4E8">        chat.add_message(message)</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">._deliver([recipient], message)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> send_to_group</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#E1E4E8">        self, group: Group, message: Message</span></span>
+<span class="line"><span style="color:#E1E4E8">    ) -> list[MessageDeliveryRecord]:</span></span>
+<span class="line"><span style="color:#E1E4E8">        recipients </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> group.recipients_for(message.sender)</span></span>
+<span class="line"><span style="color:#E1E4E8">        group.add_message(message)</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">._deliver(recipients, message)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> _deliver</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#E1E4E8">        self, recipients: list[User], message: Message</span></span>
+<span class="line"><span style="color:#E1E4E8">    ) -> list[MessageDeliveryRecord]:</span></span>
+<span class="line"><span style="color:#E1E4E8">        records </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> []</span></span>
+<span class="line"><span style="color:#F97583">        for</span><span style="color:#E1E4E8"> recipient </span><span style="color:#F97583">in</span><span style="color:#E1E4E8"> recipients:</span></span>
+<span class="line"><span style="color:#E1E4E8">            record </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> MessageDeliveryRecord.new(message, recipient)</span></span>
+<span class="line"><span style="color:#E1E4E8">            record.register_observer(</span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">._notifications.on_state_change)</span></span>
+<span class="line"><span style="color:#79B8FF">            self</span><span style="color:#E1E4E8">._records.append(record)</span></span>
+<span class="line"><span style="color:#E1E4E8">            records.append(record)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">            if</span><span style="color:#E1E4E8"> recipient.is_online:</span></span>
+<span class="line"><span style="color:#E1E4E8">                record.mark_delivered()</span></span>
+<span class="line"><span style="color:#F97583">            else</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">                self</span><span style="color:#E1E4E8">._queue.enqueue(recipient, message)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> records</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> user_came_online</span><span style="color:#E1E4E8">(self, user: User) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#9ECBFF">        """Called when a user reconnects. Drains the queue and marks messages delivered."""</span></span>
+<span class="line"><span style="color:#E1E4E8">        pending </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">._queue.drain(user)</span></span>
+<span class="line"><span style="color:#F97583">        for</span><span style="color:#E1E4E8"> message </span><span style="color:#F97583">in</span><span style="color:#E1E4E8"> pending:</span></span>
+<span class="line"><span style="color:#F97583">            for</span><span style="color:#E1E4E8"> record </span><span style="color:#F97583">in</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">._records:</span></span>
+<span class="line"><span style="color:#F97583">                if</span><span style="color:#E1E4E8"> record.message.message_id </span><span style="color:#F97583">==</span><span style="color:#E1E4E8"> message.message_id:</span></span>
+<span class="line"><span style="color:#F97583">                    if</span><span style="color:#E1E4E8"> record.recipient.user_id </span><span style="color:#F97583">==</span><span style="color:#E1E4E8"> user.user_id:</span></span>
+<span class="line"><span style="color:#E1E4E8">                        record.mark_delivered()</span></span></code></pre>
+<h2 id="design-decisions-and-trade-offs">Design Decisions and Trade-offs</h2>
+<p><strong>State as a progression, not a flag.</strong> <code>DeliveryState</code> is an enum that moves in one direction: SENT to DELIVERED to READ. There is no going backwards. Modeling it as a simple string field with any-direction mutation would allow bugs like a message moving from READ back to DELIVERED. The enum combined with the guard checks in <code>mark_delivered</code> and <code>mark_read</code> make illegal transitions impossible to express.</p>
+<p><strong>Per-recipient records for group messages.</strong> The non-obvious insight here is that a group message has no single delivery state. It has a collection of per-recipient states. You compute the aggregate state you show the sender (one tick, two ticks, blue ticks) from that collection. For one-to-one chats, there is exactly one record per message, which simplifies to the same interface. This uniformity is a nice property: <code>send_to_chat</code> and <code>send_to_group</code> both produce <code>MessageDeliveryRecord</code> lists and nothing else in the system needs to know which kind of chat it was.</p>
+<p><strong>Observer for delivery notifications.</strong> Rather than having <code>MessagingService</code> directly call the sender after each state change, delivery records fire callbacks when their state changes. This decouples <code>MessageDeliveryRecord</code> from the notification mechanism entirely. You can add logging, analytics, or push notification adapters by registering additional observers without touching the record’s logic. The cost is that the callback wiring happens at record creation time, which requires some care to get right.</p>
+<p><strong>Store-and-forward at the service layer.</strong> The <code>MessageQueue</code> is intentionally simple: a dictionary keyed by user ID, holding an ordered list of pending messages. In a real system this would be a durable queue (think Redis lists with persistence, or a dedicated message broker). The interface is the same though: <code>enqueue</code> and <code>drain</code>. Keeping it behind an interface means you can swap the backing store without changing <code>MessagingService</code>.</p>
+<p><strong>Factory for message types.</strong> The alternative is letting callers construct <code>TextMessage</code> and <code>MediaMessage</code> directly. That works, but it scatters the ID generation and timestamp logic across every call site. The factory centralizes that so message creation is always consistent.</p>
+<p><strong>End-to-end encryption as an extension point.</strong> WhatsApp’s actual encryption happens at the message content layer before the message object is ever serialized. In this design, the right place to add it is in <code>MessageFactory.create_text</code> and <code>create_media</code>, where you encrypt the content before setting it on the object, and in a corresponding decrypt step when the recipient reads it. The rest of the design does not need to know encryption exists. That isolation is deliberate.</p>
+<p><strong>The group tick problem.</strong> When should the sender see blue ticks for a group message? The strictest definition is “when all recipients have read it.” That is what WhatsApp does. The aggregate logic I stubbed in <code>NotificationService._aggregate_state</code> takes the minimum state across all records: if nine of ten people have READ the message but one has only DELIVERED, the sender sees two grey ticks. The moment the last recipient hits READ, the ticks turn blue. The engineering implication is that you need an efficient query: given a message ID, what is the minimum delivery state across all its records? Indexing by message ID in the records store makes this a fast lookup.</p>
+<h2 id="the-offline-delivery-gap">The Offline Delivery Gap</h2>
+<p>The scenario worth reasoning through carefully: Alice sends a message to Bob at 2pm. Bob’s phone is off. The message lands in the queue. Bob turns his phone on at 6pm and reconnects. <code>user_came_online</code> drains the queue, marks the record delivered, and fires the observer. Alice’s UI updates from one grey tick to two. Then Bob opens the chat, <code>mark_read</code> fires, and Alice’s ticks turn blue.</p>
+<p>The tricky part is ordering. If Alice sent five messages while Bob was offline, they need to drain and be marked delivered in timestamp order, not in whatever order the queue happened to store them. The <code>_queue</code> structure here preserves insertion order because it is a list, but you want to be explicit about sort order if you ever switch to an unordered backing store.</p>
+<hr>
+<p>If you found this useful or want to argue about where delivery state should live, I’d genuinely enjoy the conversation. Reach out on <a href="https://twitter.com/anudeepsamaiya">Twitter</a> or <a href="https://www.linkedin.com/in/anudeepsamaiya/">LinkedIn</a>.</p> </div> <!-- Social Share Buttons --> <div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-800"> <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Share this post:</p> <div class="flex gap-3"> <a href="https://twitter.com/intent/tweet?text=Design%20WhatsApp%3A%20Messages%2C%20Delivery%20Status%2C%20and%20Group%20Chats&url=https%3A%2F%2Fanudeepsamaiya.github.io%2Fblog%2F2025-06-05-lld-whatsapp%2F" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors" aria-label="Share on Twitter"> <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"> <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path> </svg>
+Twitter
+</a> <a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fanudeepsamaiya.github.io%2Fblog%2F2025-06-05-lld-whatsapp%2F" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg transition-colors" aria-label="Share on LinkedIn"> <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"> <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"></path> </svg>
+LinkedIn
+</a> <a href="https://news.ycombinator.com/submitlink?u=https%3A%2F%2Fanudeepsamaiya.github.io%2Fblog%2F2025-06-05-lld-whatsapp%2F&t=Design%20WhatsApp%3A%20Messages%2C%20Delivery%20Status%2C%20and%20Group%20Chats" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors" aria-label="Share on Hacker News"> <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"> <path d="M0 24V0h24v24H0zM6.951 5.896l4.112 7.708v5.064h1.583v-4.972l4.148-7.799h-1.749l-2.457 4.875c-.372.745-.688 1.434-.688 1.434s-.297-.708-.651-1.434L8.831 5.896h-1.88z"></path> </svg>
+HN
+</a> </div> </div> <!-- Tags at bottom --> <div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-800"> <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Tags:</p> <div class="flex flex-wrap gap-2"> <span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#lld </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#machine-coding </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#object-oriented-design </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#python </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#messaging </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#real-time </span> </div> </div> <section class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800"><h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+Related Posts
+</h2><div class="space-y-4"><a href="/blog/2026-03-10-lld-google-docs-collaborative" class="block p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Design Collaborative Document Editing: Cursors, Conflicts, and Operational Transforms</h3><p class="text-gray-600 dark:text-gray-400 text-sm mb-2">A low-level design walkthrough of collaborative document editing, explaining why naive last-write-wins breaks, how Operational Transforms work from first principles, and what makes concurrent text editing genuinely hard.</p><div class="flex gap-2 flex-wrap"><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">lld</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">machine-coding</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">object-oriented-design</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">python</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">real-time</span></div></a><a href="/blog/2022-10-20-lld-vending-machine" class="block p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Design a Vending Machine: State Machines in Practice</h3><p class="text-gray-600 dark:text-gray-400 text-sm mb-2">A first-principles LLD walkthrough of a vending machine using the State pattern. Covers state transitions, inventory management, payment handling, and why State beats if/else chains when behavior must vary by state.</p><div class="flex gap-2 flex-wrap"><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">lld</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">machine-coding</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">object-oriented-design</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">python</span></div></a><a href="/blog/2023-03-08-lld-atm-machine" class="block p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Design an ATM Machine: Transactions, State, and Security in LLD</h3><p class="text-gray-600 dark:text-gray-400 text-sm mb-2">A first-principles LLD walkthrough of an ATM covering state management, transaction types, card and account entities, cash dispensing logic, and why atomicity matters even in a machine-coding exercise.</p><div class="flex gap-2 flex-wrap"><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">lld</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">machine-coding</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">object-oriented-design</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">python</span></div></a></div></section> <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800"> <a href="/blog" class="text-blue-600 dark:text-blue-400 hover:underline">
+← Back to all posts
+</a> </div> </article> <div class="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 py-8 mt-12"> <div class="max-w-4xl mx-auto px-4"> <div class="text-center mb-6"> <h2 class="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Let's Connect! 💬</h2> <p class="text-base text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
+Whether you're looking to hire, want to collaborate on a project, or just want to chat about tech—I'd love to hear from you!
+</p> </div> <div class="flex flex-col sm:flex-row items-center justify-center gap-6"> <astro-island uid="ZC9c4W" prefix="r1" component-url="/_astro/ContactForm.DeBm0i4w.js" component-export="default" renderer-url="/_astro/client.AE0akZX9.js" props="{}" ssr client="load" opts="{&quot;name&quot;:&quot;ContactForm&quot;,&quot;value&quot;:true}"></astro-island> <div class="flex items-center gap-4"> <div class="h-8 w-px bg-gray-300 dark:bg-gray-700 hidden sm:block"></div> <p class="text-gray-600 dark:text-gray-400 text-sm hidden sm:block">or find me on</p> </div> <div class="flex gap-4"> <a href="https://github.com/anudeepsamaiya" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="GitHub"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/github.svg" alt="GitHub" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://twitter.com/anudeepsamaiya" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="X (Twitter)"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/x.svg" alt="X (Twitter)" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://www.linkedin.com/in/anudeepsamaiya/" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="LinkedIn"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/linkedin.svg" alt="LinkedIn" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://stackoverflow.com/users/2079692/anudeep-samaiya" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="Stack Overflow"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/stackoverflow.svg" alt="Stack Overflow" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://leetcode.com/anudeepsamaiya/" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="LeetCode"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/leetcode.svg" alt="LeetCode" class="w-6 h-6 opacity-60 dark:invert"> </a> </div> </div> </div> </div>  </main> <footer class="py-6 px-4 border-t border-gray-200 dark:border-gray-800"> <div class="max-w-4xl mx-auto text-center text-gray-600 dark:text-gray-400 text-sm"> <p class="mb-2"> © 2018-2026 Anudeep Samaiya. All rights reserved. </p> <p>
+Code:
+<a href="https://github.com/anudeepsamaiya/anudeepsamaiya.github.io/blob/master/LICENSE" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline mx-1">
+MIT License
+</a>
+| Content:
+<a href="https://github.com/anudeepsamaiya/anudeepsamaiya.github.io/blob/master/LICENSE-CONTENT" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline mx-1">
+CC BY 4.0
+</a> </p> </div> </footer> </div> </body></html> 
