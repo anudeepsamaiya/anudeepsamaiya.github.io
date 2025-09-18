@@ -1,0 +1,361 @@
+<!DOCTYPE html><html lang="en-US"> <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="description" content="A low-level design walkthrough of Google Drive covering the Composite pattern for file/folder hierarchy, permission inheritance, file versioning trade-offs, and conflict resolution as a natural extension point."><meta name="author" content="Anudeep Samaiya"><meta name="google-site-verification" content="twVFs_dUxCyldlt-Sif72GezMsXbI0wKJEVTBJ1A22g"><link rel="canonical" href="https://anudeepsamaiya.github.io/blog/2025-09-18-lld-google-drive/"><link rel="icon" type="image/x-icon" href="/favicon.ico"><link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png"><link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png"><link rel="apple-touch-icon" href="/apple-touch-icon.png"><link rel="manifest" href="/site.webmanifest"><title>Design Google Drive: File Storage, Sharing, and Sync | Anudeep Samaiya</title><script>
+      // Initialize theme before page renders to prevent flash
+      (function() {
+        const theme = localStorage.getItem('theme') || 'light';
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      })();
+    </script><link rel="stylesheet" href="/_astro/about.Cg2y2hoq.css">
+<style>.prose pre{overflow-x:auto}.prose pre:has(code:contains("┌")),.prose pre:has(code:contains("│")),.prose pre:has(code:contains("▶")),.prose pre:has(code:contains("└")){text-align:center;display:flex;justify-content:center}
+</style></head> <body class="bg-white dark:bg-gray-900"> <div class="min-h-screen flex flex-col"> <header class="py-6 px-4 border-b border-gray-200 dark:border-gray-800"> <nav class="max-w-4xl mx-auto flex justify-between items-center"> <a href="/" class="text-2xl font-bold text-gray-900 dark:text-white"> Anudeep Samaiya </a> <div class="flex items-center gap-6"> <ul class="flex gap-6"> <li> <a href="/about" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"> About </a> </li><li> <a href="/blog" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"> Blog </a> </li><li> <a href="/reading" class="text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white transition-colors"> Reading </a> </li> </ul> <style>astro-island,astro-slot,astro-static-slot{display:contents}</style><script>(()=>{var e=async t=>{await(await t())()};(self.Astro||(self.Astro={})).load=e;window.dispatchEvent(new Event("astro:load"));})();</script><script>(()=>{var A=Object.defineProperty;var g=(i,o,a)=>o in i?A(i,o,{enumerable:!0,configurable:!0,writable:!0,value:a}):i[o]=a;var d=(i,o,a)=>g(i,typeof o!="symbol"?o+"":o,a);{let i={0:t=>m(t),1:t=>a(t),2:t=>new RegExp(t),3:t=>new Date(t),4:t=>new Map(a(t)),5:t=>new Set(a(t)),6:t=>BigInt(t),7:t=>new URL(t),8:t=>new Uint8Array(t),9:t=>new Uint16Array(t),10:t=>new Uint32Array(t),11:t=>1/0*t},o=t=>{let[l,e]=t;return l in i?i[l](e):void 0},a=t=>t.map(o),m=t=>typeof t!="object"||t===null?t:Object.fromEntries(Object.entries(t).map(([l,e])=>[l,o(e)]));class y extends HTMLElement{constructor(){super(...arguments);d(this,"Component");d(this,"hydrator");d(this,"hydrate",async()=>{var b;if(!this.hydrator||!this.isConnected)return;let e=(b=this.parentElement)==null?void 0:b.closest("astro-island[ssr]");if(e){e.addEventListener("astro:hydrate",this.hydrate,{once:!0});return}let c=this.querySelectorAll("astro-slot"),n={},h=this.querySelectorAll("template[data-astro-template]");for(let r of h){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("data-astro-template")||"default"]=r.innerHTML,r.remove())}for(let r of c){let s=r.closest(this.tagName);s!=null&&s.isSameNode(this)&&(n[r.getAttribute("name")||"default"]=r.innerHTML)}let p;try{p=this.hasAttribute("props")?m(JSON.parse(this.getAttribute("props"))):{}}catch(r){let s=this.getAttribute("component-url")||"<unknown>",v=this.getAttribute("component-export");throw v&&(s+=` (export ${v})`),console.error(`[hydrate] Error parsing props for component ${s}`,this.getAttribute("props"),r),r}let u;await this.hydrator(this)(this.Component,p,n,{client:this.getAttribute("client")}),this.removeAttribute("ssr"),this.dispatchEvent(new CustomEvent("astro:hydrate"))});d(this,"unmount",()=>{this.isConnected||this.dispatchEvent(new CustomEvent("astro:unmount"))})}disconnectedCallback(){document.removeEventListener("astro:after-swap",this.unmount),document.addEventListener("astro:after-swap",this.unmount,{once:!0})}connectedCallback(){if(!this.hasAttribute("await-children")||document.readyState==="interactive"||document.readyState==="complete")this.childrenConnectedCallback();else{let e=()=>{document.removeEventListener("DOMContentLoaded",e),c.disconnect(),this.childrenConnectedCallback()},c=new MutationObserver(()=>{var n;((n=this.lastChild)==null?void 0:n.nodeType)===Node.COMMENT_NODE&&this.lastChild.nodeValue==="astro:end"&&(this.lastChild.remove(),e())});c.observe(this,{childList:!0}),document.addEventListener("DOMContentLoaded",e)}}async childrenConnectedCallback(){let e=this.getAttribute("before-hydration-url");e&&await import(e),this.start()}async start(){let e=JSON.parse(this.getAttribute("opts")),c=this.getAttribute("client");if(Astro[c]===void 0){window.addEventListener(`astro:${c}`,()=>this.start(),{once:!0});return}try{await Astro[c](async()=>{let n=this.getAttribute("renderer-url"),[h,{default:p}]=await Promise.all([import(this.getAttribute("component-url")),n?import(n):()=>()=>{}]),u=this.getAttribute("component-export")||"default";if(!u.includes("."))this.Component=h[u];else{this.Component=h;for(let f of u.split("."))this.Component=this.Component[f]}return this.hydrator=p,this.hydrate},e,this)}catch(n){console.error(`[astro-island] Error hydrating ${this.getAttribute("component-url")}`,n)}}attributeChangedCallback(){this.hydrate()}}d(y,"observedAttributes",["props"]),customElements.get("astro-island")||customElements.define("astro-island",y)}})();</script><astro-island uid="Z1WQ4OE" prefix="r0" component-url="/_astro/ThemeToggle.C_FMJT46.js" component-export="default" renderer-url="/_astro/client.AE0akZX9.js" props="{}" ssr client="load" opts="{&quot;name&quot;:&quot;ThemeToggle&quot;,&quot;value&quot;:true}" await-children><div class="w-9 h-9 p-2 rounded-lg bg-gray-100 dark:bg-gray-800"><div class="w-5 h-5"></div></div><!--astro:end--></astro-island> </div> </nav> </header> <main class="flex-1">  <article class="max-w-4xl mx-auto px-4 py-12"> <header class="mb-8"> <h1 class="text-4xl font-bold mb-4 text-gray-900 dark:text-white"> Design Google Drive: File Storage, Sharing, and Sync </h1> <div class="flex items-center gap-4 text-gray-600 dark:text-gray-400"> <time> September 18, 2025 </time> </div> </header> <div class="prose prose-lg dark:prose-invert max-w-none mb-12"> <p>When I reason through designing a file storage system, the first thing that trips me up is the file-and-folder hierarchy. At first it feels like a tree problem: folders contain files, folders can contain other folders, and you need to navigate the tree. That is true. But the question that reshapes the design is: should a file and a folder be different types, or the same type with different behavior?</p>
+<p>If you make them different, you end up writing code that asks “is this a file or a folder?” everywhere. Every function that traverses the tree has to handle two cases. Every permission check has to branch. The Composite pattern solves this cleanly: a folder is a node that can contain children, a file is a leaf node that cannot, and both implement the same <code>FileSystemNode</code> interface. Code that navigates, shares, or versions the hierarchy never needs to know which kind of node it is holding. That is the insight that makes everything else in this design tractable.</p>
+<p>The second interesting problem is permissions. Google Drive’s sharing model looks simple from the outside: you can be an Owner, Editor, or Viewer. But the inheritance question is subtle. If Alice shares a folder with Bob as Editor, does that permission automatically propagate to every file inside it? What if Charlie then changes the permission on one specific file? How do you resolve the conflict between the inherited folder permission and the explicit file permission? Reasoning through this cleanly is more interesting than the CRUD operations people usually focus on.</p>
+<h2 id="requirements">Requirements</h2>
+<p><strong>Functional</strong></p>
+<ul>
+<li>Users can create, read, update, and delete files and folders</li>
+<li>Files and folders can be shared with other users with Owner, Editor, or Viewer permission levels</li>
+<li>Permissions on a folder propagate to all children unless explicitly overridden</li>
+<li>Every file update creates a new version, and users can retrieve or restore previous versions</li>
+<li>A sync client detects local changes and propagates them to the server</li>
+</ul>
+<p><strong>Non-functional</strong></p>
+<ul>
+<li>The design must handle deep folder hierarchies without special-casing at each level</li>
+<li>Changing the storage backend (local disk, S3, GCS) should not require changing domain logic</li>
+<li>Conflict detection when two users edit simultaneously should be addressable as an extension</li>
+</ul>
+<h2 id="core-entities">Core Entities</h2>
+<p><strong><code>FileSystemNode</code></strong> is the abstract base for everything in the hierarchy. It holds the common fields: ID, name, owner, creation timestamp, and a permission map. Both files and folders extend it. Code that traverses the tree operates on <code>FileSystemNode</code> and never needs to know whether it has a file or a folder.</p>
+<p><strong><code>File</code></strong> is a leaf node. It holds the current version reference and delegates to the storage backend for actual byte retrieval. It cannot have children.</p>
+<p><strong><code>Folder</code></strong> is a composite node. It holds a list of child <code>FileSystemNode</code> objects. Adding or removing a child changes the folder’s contents without knowing anything about what kind of node is being added.</p>
+<p><strong><code>FileVersion</code></strong> is an immutable snapshot of a file at a point in time. When a user uploads a new version, a new <code>FileVersion</code> is created and prepended to the file’s version history. The previous version is not deleted. It is just no longer the current one.</p>
+<p><strong><code>Permission</code></strong> represents a single user’s access level on a node. It holds the user reference, the role (OWNER, EDITOR, VIEWER), and whether it was explicitly set or inherited. That inheritance flag matters for the resolution logic.</p>
+<p><strong><code>ShareLink</code></strong> is an optional, token-based access mechanism. Rather than granting a specific user access, you generate a shareable URL. Anyone with the link gets the associated permission. This is a separate entity so it can be revoked independently of user-level permissions.</p>
+<p><strong><code>StorageBackend</code></strong> is an interface abstracting where file bytes actually live. Local disk and cloud object storage are two implementations. The rest of the system treats them identically.</p>
+<p><strong><code>SyncClient</code></strong> detects local filesystem changes, debounces them, and pushes diffs to the server. It also listens for server-side change notifications and applies them locally.</p>
+<h2 id="class-design">Class Design</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="plaintext"><code><span class="line"><span>+------------------------+</span></span>
+<span class="line"><span>|    FileSystemNode      |  &#x3C;-- abstract</span></span>
+<span class="line"><span>|------------------------|</span></span>
+<span class="line"><span>| node_id: str           |</span></span>
+<span class="line"><span>| name: str              |</span></span>
+<span class="line"><span>| owner: User            |</span></span>
+<span class="line"><span>| created_at: datetime   |</span></span>
+<span class="line"><span>| permissions: dict      |</span></span>
+<span class="line"><span>|------------------------|</span></span>
+<span class="line"><span>| get_permission(user)   |</span></span>
+<span class="line"><span>| share(user, role)      |</span></span>
+<span class="line"><span>| revoke(user)           |</span></span>
+<span class="line"><span>+------------------------+</span></span>
+<span class="line"><span>         ^          ^</span></span>
+<span class="line"><span>         |          |</span></span>
+<span class="line"><span>+--------+---+  +---+--------+</span></span>
+<span class="line"><span>|   File     |  |   Folder   |</span></span>
+<span class="line"><span>|------------|  |------------|</span></span>
+<span class="line"><span>| versions   |  | children   |</span></span>
+<span class="line"><span>| current_v  |  |            |</span></span>
+<span class="line"><span>| storage    |  | add_child()|</span></span>
+<span class="line"><span>|------------|  | remove()   |</span></span>
+<span class="line"><span>| read()     |  | list()     |</span></span>
+<span class="line"><span>| write(data)|  +------------+</span></span>
+<span class="line"><span>+------------+</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>+------------------+     +------------------+</span></span>
+<span class="line"><span>|   FileVersion    |     |   Permission     |</span></span>
+<span class="line"><span>|------------------|     |------------------|</span></span>
+<span class="line"><span>| version_id: str  |     | user: User       |</span></span>
+<span class="line"><span>| file_id: str     |     | role: Role       |</span></span>
+<span class="line"><span>| storage_key: str |     | inherited: bool  |</span></span>
+<span class="line"><span>| size_bytes: int  |     +------------------+</span></span>
+<span class="line"><span>| created_at       |</span></span>
+<span class="line"><span>| author: User     |</span></span>
+<span class="line"><span>+------------------+</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>+------------------+     +-------------------+</span></span>
+<span class="line"><span>|   ShareLink      |     |  StorageBackend   |</span></span>
+<span class="line"><span>|------------------|     |-------------------|</span></span>
+<span class="line"><span>| token: str       |     | + put(key, data)  |</span></span>
+<span class="line"><span>| node: FsNode     |     | + get(key) -> ... |</span></span>
+<span class="line"><span>| role: Role       |     | + delete(key)     |</span></span>
+<span class="line"><span>| expires_at       |     +-------------------+</span></span>
+<span class="line"><span>| is_revoked: bool |</span></span>
+<span class="line"><span>+------------------+</span></span>
+<span class="line"><span></span></span>
+<span class="line"><span>+----------------------+</span></span>
+<span class="line"><span>|    SyncClient        |</span></span>
+<span class="line"><span>|----------------------|</span></span>
+<span class="line"><span>| local_path: str      |</span></span>
+<span class="line"><span>| remote_root: Folder  |</span></span>
+<span class="line"><span>| _watcher             |</span></span>
+<span class="line"><span>|----------------------|</span></span>
+<span class="line"><span>| start()              |</span></span>
+<span class="line"><span>| _on_local_change()   |</span></span>
+<span class="line"><span>| _apply_remote()      |</span></span>
+<span class="line"><span>+----------------------+</span></span></code></pre>
+<h2 id="key-implementation">Key Implementation</h2>
+<pre class="astro-code github-dark" style="background-color:#24292e;color:#e1e4e8; overflow-x: auto;" tabindex="0" data-language="python"><code><span class="line"><span style="color:#F97583">from</span><span style="color:#79B8FF"> __future__</span><span style="color:#F97583"> import</span><span style="color:#E1E4E8"> annotations</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">import</span><span style="color:#E1E4E8"> uuid</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> abc </span><span style="color:#F97583">import</span><span style="color:#79B8FF"> ABC</span><span style="color:#E1E4E8">, abstractmethod</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> dataclasses </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> dataclass, field</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> datetime </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> datetime</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> enum </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> Enum, auto</span></span>
+<span class="line"><span style="color:#F97583">from</span><span style="color:#E1E4E8"> typing </span><span style="color:#F97583">import</span><span style="color:#E1E4E8"> Iterator, Optional</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> Role</span><span style="color:#E1E4E8">(</span><span style="color:#B392F0">Enum</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#79B8FF">    OWNER</span><span style="color:#F97583"> =</span><span style="color:#9ECBFF"> "owner"</span></span>
+<span class="line"><span style="color:#79B8FF">    EDITOR</span><span style="color:#F97583"> =</span><span style="color:#9ECBFF"> "editor"</span></span>
+<span class="line"><span style="color:#79B8FF">    VIEWER</span><span style="color:#F97583"> =</span><span style="color:#9ECBFF"> "viewer"</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">@dataclass</span></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> User</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    user_id: </span><span style="color:#79B8FF">str</span></span>
+<span class="line"><span style="color:#E1E4E8">    email: </span><span style="color:#79B8FF">str</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">@dataclass</span></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> Permission</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    user: User</span></span>
+<span class="line"><span style="color:#E1E4E8">    role: Role</span></span>
+<span class="line"><span style="color:#E1E4E8">    inherited: </span><span style="color:#79B8FF">bool</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> False</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">@dataclass</span></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> FileVersion</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    version_id: </span><span style="color:#79B8FF">str</span></span>
+<span class="line"><span style="color:#E1E4E8">    file_id: </span><span style="color:#79B8FF">str</span></span>
+<span class="line"><span style="color:#E1E4E8">    storage_key: </span><span style="color:#79B8FF">str</span></span>
+<span class="line"><span style="color:#E1E4E8">    size_bytes: </span><span style="color:#79B8FF">int</span></span>
+<span class="line"><span style="color:#E1E4E8">    created_at: datetime</span></span>
+<span class="line"><span style="color:#E1E4E8">    author: User</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">    @</span><span style="color:#79B8FF">staticmethod</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> create</span><span style="color:#E1E4E8">(file_id: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">, storage_key: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">, size: </span><span style="color:#79B8FF">int</span><span style="color:#E1E4E8">, author: User) -> </span><span style="color:#9ECBFF">"FileVersion"</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> FileVersion(</span></span>
+<span class="line"><span style="color:#FFAB70">            version_id</span><span style="color:#F97583">=</span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">(uuid.uuid4()),</span></span>
+<span class="line"><span style="color:#FFAB70">            file_id</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">file_id,</span></span>
+<span class="line"><span style="color:#FFAB70">            storage_key</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">storage_key,</span></span>
+<span class="line"><span style="color:#FFAB70">            size_bytes</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">size,</span></span>
+<span class="line"><span style="color:#FFAB70">            created_at</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">datetime.utcnow(),</span></span>
+<span class="line"><span style="color:#FFAB70">            author</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">author,</span></span>
+<span class="line"><span style="color:#E1E4E8">        )</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> StorageBackend</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">ABC</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#B392F0">    @abstractmethod</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> put</span><span style="color:#E1E4E8">(self, key: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">, data: </span><span style="color:#79B8FF">bytes</span><span style="color:#E1E4E8">) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">...</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">    @abstractmethod</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> get</span><span style="color:#E1E4E8">(self, key: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">) -> </span><span style="color:#79B8FF">bytes</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">...</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">    @abstractmethod</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> delete</span><span style="color:#E1E4E8">(self, key: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">...</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> LocalStorageBackend</span><span style="color:#E1E4E8">(</span><span style="color:#B392F0">StorageBackend</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#79B8FF"> __init__</span><span style="color:#E1E4E8">(self, base_path: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._base </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> base_path</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> put</span><span style="color:#E1E4E8">(self, key: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">, data: </span><span style="color:#79B8FF">bytes</span><span style="color:#E1E4E8">) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        import</span><span style="color:#E1E4E8"> os</span></span>
+<span class="line"><span style="color:#E1E4E8">        path </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> os.path.join(</span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">._base, key)</span></span>
+<span class="line"><span style="color:#E1E4E8">        os.makedirs(os.path.dirname(path), </span><span style="color:#FFAB70">exist_ok</span><span style="color:#F97583">=</span><span style="color:#79B8FF">True</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#F97583">        with</span><span style="color:#79B8FF"> open</span><span style="color:#E1E4E8">(path, </span><span style="color:#9ECBFF">"wb"</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">as</span><span style="color:#E1E4E8"> f:</span></span>
+<span class="line"><span style="color:#E1E4E8">            f.write(data)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> get</span><span style="color:#E1E4E8">(self, key: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">) -> </span><span style="color:#79B8FF">bytes</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        import</span><span style="color:#E1E4E8"> os</span></span>
+<span class="line"><span style="color:#F97583">        with</span><span style="color:#79B8FF"> open</span><span style="color:#E1E4E8">(os.path.join(</span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">._base, key), </span><span style="color:#9ECBFF">"rb"</span><span style="color:#E1E4E8">) </span><span style="color:#F97583">as</span><span style="color:#E1E4E8"> f:</span></span>
+<span class="line"><span style="color:#F97583">            return</span><span style="color:#E1E4E8"> f.read()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> delete</span><span style="color:#E1E4E8">(self, key: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        import</span><span style="color:#E1E4E8"> os</span></span>
+<span class="line"><span style="color:#E1E4E8">        os.remove(os.path.join(</span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">._base, key))</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> FileSystemNode</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">ABC</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#79B8FF"> __init__</span><span style="color:#E1E4E8">(self, name: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">, owner: User) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.node_id </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> str</span><span style="color:#E1E4E8">(uuid.uuid4())</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.name </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> name</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.owner </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> owner</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.created_at </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> datetime.utcnow()</span></span>
+<span class="line"><span style="color:#6A737D">        # explicit permissions set directly on this node</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._permissions: dict[</span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">, Permission] </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> {</span></span>
+<span class="line"><span style="color:#E1E4E8">            owner.user_id: Permission(</span><span style="color:#FFAB70">user</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">owner, </span><span style="color:#FFAB70">role</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">Role.</span><span style="color:#79B8FF">OWNER</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#E1E4E8">        }</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> share</span><span style="color:#E1E4E8">(self, user: User, role: Role, inherited: </span><span style="color:#79B8FF">bool</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> False</span><span style="color:#E1E4E8">) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._permissions[user.user_id] </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> Permission(</span></span>
+<span class="line"><span style="color:#FFAB70">            user</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">user, </span><span style="color:#FFAB70">role</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">role, </span><span style="color:#FFAB70">inherited</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">inherited</span></span>
+<span class="line"><span style="color:#E1E4E8">        )</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> revoke</span><span style="color:#E1E4E8">(self, user: User) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._permissions.pop(user.user_id, </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> get_permission</span><span style="color:#E1E4E8">(self, user: User) -> Optional[Permission]:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">._permissions.get(user.user_id)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> can_read</span><span style="color:#E1E4E8">(self, user: User) -> </span><span style="color:#79B8FF">bool</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        perm </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.get_permission(user)</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> perm </span><span style="color:#F97583">is</span><span style="color:#F97583"> not</span><span style="color:#79B8FF"> None</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> can_write</span><span style="color:#E1E4E8">(self, user: User) -> </span><span style="color:#79B8FF">bool</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">        perm </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.get_permission(user)</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> perm </span><span style="color:#F97583">is</span><span style="color:#F97583"> not</span><span style="color:#79B8FF"> None</span><span style="color:#F97583"> and</span><span style="color:#E1E4E8"> perm.role </span><span style="color:#F97583">in</span><span style="color:#E1E4E8"> (Role.</span><span style="color:#79B8FF">OWNER</span><span style="color:#E1E4E8">, Role.</span><span style="color:#79B8FF">EDITOR</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">    @abstractmethod</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> size_bytes</span><span style="color:#E1E4E8">(self) -> </span><span style="color:#79B8FF">int</span><span style="color:#E1E4E8">: </span><span style="color:#79B8FF">...</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> File</span><span style="color:#E1E4E8">(</span><span style="color:#B392F0">FileSystemNode</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#79B8FF"> __init__</span><span style="color:#E1E4E8">(self, name: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">, owner: User, storage: StorageBackend) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        super</span><span style="color:#E1E4E8">().</span><span style="color:#79B8FF">__init__</span><span style="color:#E1E4E8">(name, owner)</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._storage </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> storage</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._versions: list[FileVersion] </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> []</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">    @</span><span style="color:#79B8FF">property</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> current_version</span><span style="color:#E1E4E8">(self) -> Optional[FileVersion]:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">._versions[</span><span style="color:#79B8FF">0</span><span style="color:#E1E4E8">] </span><span style="color:#F97583">if</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">._versions </span><span style="color:#F97583">else</span><span style="color:#79B8FF"> None</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> write</span><span style="color:#E1E4E8">(self, data: </span><span style="color:#79B8FF">bytes</span><span style="color:#E1E4E8">, author: User) -> FileVersion:</span></span>
+<span class="line"><span style="color:#E1E4E8">        key </span><span style="color:#F97583">=</span><span style="color:#F97583"> f</span><span style="color:#9ECBFF">"</span><span style="color:#79B8FF">{self</span><span style="color:#E1E4E8">.node_id</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">/</span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">uuid.uuid4()</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF">"</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._storage.put(key, data)</span></span>
+<span class="line"><span style="color:#E1E4E8">        version </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> FileVersion.create(</span></span>
+<span class="line"><span style="color:#FFAB70">            file_id</span><span style="color:#F97583">=</span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">.node_id,</span></span>
+<span class="line"><span style="color:#FFAB70">            storage_key</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">key,</span></span>
+<span class="line"><span style="color:#FFAB70">            size</span><span style="color:#F97583">=</span><span style="color:#79B8FF">len</span><span style="color:#E1E4E8">(data),</span></span>
+<span class="line"><span style="color:#FFAB70">            author</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">author,</span></span>
+<span class="line"><span style="color:#E1E4E8">        )</span></span>
+<span class="line"><span style="color:#6A737D">        # Prepend so index 0 is always current</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._versions.insert(</span><span style="color:#79B8FF">0</span><span style="color:#E1E4E8">, version)</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> version</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> read</span><span style="color:#E1E4E8">(self) -> </span><span style="color:#79B8FF">bytes</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#F97583"> not</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">._versions:</span></span>
+<span class="line"><span style="color:#F97583">            raise</span><span style="color:#79B8FF"> ValueError</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">f</span><span style="color:#9ECBFF">"File </span><span style="color:#79B8FF">{self</span><span style="color:#E1E4E8">.name</span><span style="color:#F97583">!r</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF"> has no content yet"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">._storage.get(</span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">._versions[</span><span style="color:#79B8FF">0</span><span style="color:#E1E4E8">].storage_key)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> restore_version</span><span style="color:#E1E4E8">(self, version_id: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#9ECBFF">        """Move the specified version to the front without deleting history."""</span></span>
+<span class="line"><span style="color:#F97583">        for</span><span style="color:#E1E4E8"> i, v </span><span style="color:#F97583">in</span><span style="color:#79B8FF"> enumerate</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">._versions):</span></span>
+<span class="line"><span style="color:#F97583">            if</span><span style="color:#E1E4E8"> v.version_id </span><span style="color:#F97583">==</span><span style="color:#E1E4E8"> version_id:</span></span>
+<span class="line"><span style="color:#79B8FF">                self</span><span style="color:#E1E4E8">._versions.insert(</span><span style="color:#79B8FF">0</span><span style="color:#E1E4E8">, </span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">._versions.pop(i))</span></span>
+<span class="line"><span style="color:#F97583">                return</span></span>
+<span class="line"><span style="color:#F97583">        raise</span><span style="color:#79B8FF"> ValueError</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">f</span><span style="color:#9ECBFF">"Version </span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">version_id</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF"> not found"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> list_versions</span><span style="color:#E1E4E8">(self) -> list[FileVersion]:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> list</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">._versions)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> size_bytes</span><span style="color:#E1E4E8">(self) -> </span><span style="color:#79B8FF">int</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">._versions[</span><span style="color:#79B8FF">0</span><span style="color:#E1E4E8">].size_bytes </span><span style="color:#F97583">if</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">._versions </span><span style="color:#F97583">else</span><span style="color:#79B8FF"> 0</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> Folder</span><span style="color:#E1E4E8">(</span><span style="color:#B392F0">FileSystemNode</span><span style="color:#E1E4E8">):</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#79B8FF"> __init__</span><span style="color:#E1E4E8">(self, name: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">, owner: User) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        super</span><span style="color:#E1E4E8">().</span><span style="color:#79B8FF">__init__</span><span style="color:#E1E4E8">(name, owner)</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._children: dict[</span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">, FileSystemNode] </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> {}</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> add_child</span><span style="color:#E1E4E8">(self, node: FileSystemNode) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#E1E4E8"> node.node_id </span><span style="color:#F97583">in</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">._children:</span></span>
+<span class="line"><span style="color:#F97583">            raise</span><span style="color:#79B8FF"> ValueError</span><span style="color:#E1E4E8">(</span><span style="color:#F97583">f</span><span style="color:#9ECBFF">"Node </span><span style="color:#79B8FF">{</span><span style="color:#E1E4E8">node.name</span><span style="color:#F97583">!r</span><span style="color:#79B8FF">}</span><span style="color:#9ECBFF"> already exists in this folder"</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._children[node.node_id] </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> node</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> remove_child</span><span style="color:#E1E4E8">(self, node_id: </span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">._children.pop(node_id, </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> list_children</span><span style="color:#E1E4E8">(self) -> list[FileSystemNode]:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> list</span><span style="color:#E1E4E8">(</span><span style="color:#79B8FF">self</span><span style="color:#E1E4E8">._children.values())</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> propagate_permission</span><span style="color:#E1E4E8">(self, user: User, role: Role) -> </span><span style="color:#79B8FF">None</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#9ECBFF">        """</span></span>
+<span class="line"><span style="color:#9ECBFF">        Share this folder with user and cascade the permission</span></span>
+<span class="line"><span style="color:#9ECBFF">        to all descendants that do not have an explicit override.</span></span>
+<span class="line"><span style="color:#9ECBFF">        """</span></span>
+<span class="line"><span style="color:#79B8FF">        self</span><span style="color:#E1E4E8">.share(user, role)</span></span>
+<span class="line"><span style="color:#F97583">        for</span><span style="color:#E1E4E8"> child </span><span style="color:#F97583">in</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">._walk():</span></span>
+<span class="line"><span style="color:#E1E4E8">            existing </span><span style="color:#F97583">=</span><span style="color:#E1E4E8"> child.get_permission(user)</span></span>
+<span class="line"><span style="color:#6A737D">            # Only set inherited permission if no explicit permission exists</span></span>
+<span class="line"><span style="color:#F97583">            if</span><span style="color:#E1E4E8"> existing </span><span style="color:#F97583">is</span><span style="color:#79B8FF"> None</span><span style="color:#F97583"> or</span><span style="color:#E1E4E8"> existing.inherited:</span></span>
+<span class="line"><span style="color:#E1E4E8">                child.share(user, role, </span><span style="color:#FFAB70">inherited</span><span style="color:#F97583">=</span><span style="color:#79B8FF">True</span><span style="color:#E1E4E8">)</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> _walk</span><span style="color:#E1E4E8">(self) -> Iterator[FileSystemNode]:</span></span>
+<span class="line"><span style="color:#F97583">        for</span><span style="color:#E1E4E8"> child </span><span style="color:#F97583">in</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">._children.values():</span></span>
+<span class="line"><span style="color:#F97583">            yield</span><span style="color:#E1E4E8"> child</span></span>
+<span class="line"><span style="color:#F97583">            if</span><span style="color:#79B8FF"> isinstance</span><span style="color:#E1E4E8">(child, Folder):</span></span>
+<span class="line"><span style="color:#F97583">                yield from</span><span style="color:#E1E4E8"> child._walk()</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> size_bytes</span><span style="color:#E1E4E8">(self) -> </span><span style="color:#79B8FF">int</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> sum</span><span style="color:#E1E4E8">(child.size_bytes() </span><span style="color:#F97583">for</span><span style="color:#E1E4E8"> child </span><span style="color:#F97583">in</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">._children.values())</span></span>
+<span class="line"></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">@dataclass</span></span>
+<span class="line"><span style="color:#F97583">class</span><span style="color:#B392F0"> ShareLink</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#E1E4E8">    token: </span><span style="color:#79B8FF">str</span></span>
+<span class="line"><span style="color:#E1E4E8">    node: FileSystemNode</span></span>
+<span class="line"><span style="color:#E1E4E8">    role: Role</span></span>
+<span class="line"><span style="color:#E1E4E8">    created_by: User</span></span>
+<span class="line"><span style="color:#E1E4E8">    expires_at: Optional[datetime] </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> None</span></span>
+<span class="line"><span style="color:#E1E4E8">    is_revoked: </span><span style="color:#79B8FF">bool</span><span style="color:#F97583"> =</span><span style="color:#79B8FF"> False</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#B392F0">    @</span><span style="color:#79B8FF">staticmethod</span></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> create</span><span style="color:#E1E4E8">(</span></span>
+<span class="line"><span style="color:#E1E4E8">        node: FileSystemNode,</span></span>
+<span class="line"><span style="color:#E1E4E8">        role: Role,</span></span>
+<span class="line"><span style="color:#E1E4E8">        created_by: User,</span></span>
+<span class="line"><span style="color:#E1E4E8">        expires_at: Optional[datetime] </span><span style="color:#F97583">=</span><span style="color:#79B8FF"> None</span><span style="color:#E1E4E8">,</span></span>
+<span class="line"><span style="color:#E1E4E8">    ) -> </span><span style="color:#9ECBFF">"ShareLink"</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#E1E4E8"> ShareLink(</span></span>
+<span class="line"><span style="color:#FFAB70">            token</span><span style="color:#F97583">=</span><span style="color:#79B8FF">str</span><span style="color:#E1E4E8">(uuid.uuid4()),</span></span>
+<span class="line"><span style="color:#FFAB70">            node</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">node,</span></span>
+<span class="line"><span style="color:#FFAB70">            role</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">role,</span></span>
+<span class="line"><span style="color:#FFAB70">            created_by</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">created_by,</span></span>
+<span class="line"><span style="color:#FFAB70">            expires_at</span><span style="color:#F97583">=</span><span style="color:#E1E4E8">expires_at,</span></span>
+<span class="line"><span style="color:#E1E4E8">        )</span></span>
+<span class="line"></span>
+<span class="line"><span style="color:#F97583">    def</span><span style="color:#B392F0"> is_valid</span><span style="color:#E1E4E8">(self) -> </span><span style="color:#79B8FF">bool</span><span style="color:#E1E4E8">:</span></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.is_revoked:</span></span>
+<span class="line"><span style="color:#F97583">            return</span><span style="color:#79B8FF"> False</span></span>
+<span class="line"><span style="color:#F97583">        if</span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.expires_at </span><span style="color:#F97583">and</span><span style="color:#E1E4E8"> datetime.utcnow() </span><span style="color:#F97583">></span><span style="color:#79B8FF"> self</span><span style="color:#E1E4E8">.expires_at:</span></span>
+<span class="line"><span style="color:#F97583">            return</span><span style="color:#79B8FF"> False</span></span>
+<span class="line"><span style="color:#F97583">        return</span><span style="color:#79B8FF"> True</span></span></code></pre>
+<h2 id="design-decisions-and-trade-offs">Design Decisions and Trade-offs</h2>
+<p><strong>Why Composite is the right call here.</strong> The alternative is a class hierarchy where <code>Folder</code> has a <code>files: list[File]</code> and a <code>subfolders: list[Folder]</code>. That forces every caller to handle two separate collections and check types constantly. With Composite, <code>Folder._children</code> is a single <code>dict[str, FileSystemNode]</code>. Move a file into a folder, move a folder into a folder, calculate total size recursively: all of these work identically regardless of node type. The only place the type distinction matters is when you need folder-specific behavior (listing children, propagating permissions), and that code lives inside <code>Folder</code> where it belongs.</p>
+<p><strong>Permission inheritance and explicit overrides.</strong> The <code>propagate_permission</code> method cascades a permission down to all descendants, but only if the descendant has no explicit permission already set (or only has a previously inherited one). This means explicit permissions win over inherited ones. If Alice shares a folder with Bob as Viewer, and then shares one specific file inside it with Bob as Editor, Bob keeps Editor access to that file even when Alice updates the folder-level permission later. The <code>inherited</code> flag on <code>Permission</code> is what makes this distinction trackable.</p>
+<p><strong>Versioning: full snapshots vs. deltas.</strong> This design stores full snapshots of each version. Every write creates a new storage key with the complete file contents. The simpler mental model is the primary advantage. The cost is storage: a 10MB document edited 100 times takes 1GB of version storage. Delta-based versioning stores only the diff between versions, which is far more space-efficient for large text documents but requires you to reconstruct the full file by replaying a chain of deltas. Google Docs actually uses operational transforms for collaborative editing (more on that in a separate post) which produces a natural delta log. For a basic Drive implementation, full snapshots are the right starting point. Deltas are an optimization you add when storage cost becomes a measured problem.</p>
+<p><strong>Storage backend as a Strategy.</strong> <code>LocalStorageBackend</code> and a hypothetical <code>S3StorageBackend</code> implement the same three-method interface. The <code>File</code> class never calls cloud-provider APIs directly. This means you can test the entire file hierarchy logic with <code>LocalStorageBackend</code> and swap to object storage in production without touching domain code. It also means a file’s storage location is configurable per file, which lets you implement tiered storage (hot files on SSD, cold archived versions in cheap object storage) by choosing the backend at write time.</p>
+<p><strong>Share links as a separate entity.</strong> The temptation is to model sharing as simply adding a permission to the node. But share links have their own lifecycle: they can expire, they can be revoked independently, and they grant access to anyone with the token rather than a specific user. Keeping <code>ShareLink</code> as a separate entity means you can invalidate all outstanding links for a file without touching user-level permissions, and you can audit link usage separately from direct share usage.</p>
+<p><strong>Conflict resolution: the gap this design leaves open.</strong> Two users downloading the same file, editing locally, and uploading back is the classic conflict scenario. The <code>SyncClient</code> detects that the server version changed since the client’s last sync and raises a conflict. The simplest resolution is “last write wins”: whoever uploads last has their version stored as current, and the other version is preserved in history. That is what this design does implicitly. The more correct approach for text documents is operational transforms or CRDTs, which allow merging concurrent edits. For binary files like images and spreadsheets, last-write-wins is often the only practical choice. Making the conflict resolution strategy explicit and swappable is the right design direction if you need to support both.</p>
+<hr>
+<p>If you want to dig into how permission inheritance should behave at the edges, or why delta versioning is harder than it sounds, I’d enjoy the conversation. Reach out on <a href="https://twitter.com/anudeepsamaiya">Twitter</a> or <a href="https://www.linkedin.com/in/anudeepsamaiya/">LinkedIn</a>.</p> </div> <!-- Social Share Buttons --> <div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-800"> <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Share this post:</p> <div class="flex gap-3"> <a href="https://twitter.com/intent/tweet?text=Design%20Google%20Drive%3A%20File%20Storage%2C%20Sharing%2C%20and%20Sync&url=https%3A%2F%2Fanudeepsamaiya.github.io%2Fblog%2F2025-09-18-lld-google-drive%2F" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors" aria-label="Share on Twitter"> <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"> <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path> </svg>
+Twitter
+</a> <a href="https://www.linkedin.com/sharing/share-offsite/?url=https%3A%2F%2Fanudeepsamaiya.github.io%2Fblog%2F2025-09-18-lld-google-drive%2F" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg transition-colors" aria-label="Share on LinkedIn"> <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"> <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"></path> </svg>
+LinkedIn
+</a> <a href="https://news.ycombinator.com/submitlink?u=https%3A%2F%2Fanudeepsamaiya.github.io%2Fblog%2F2025-09-18-lld-google-drive%2F&t=Design%20Google%20Drive%3A%20File%20Storage%2C%20Sharing%2C%20and%20Sync" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors" aria-label="Share on Hacker News"> <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"> <path d="M0 24V0h24v24H0zM6.951 5.896l4.112 7.708v5.064h1.583v-4.972l4.148-7.799h-1.749l-2.457 4.875c-.372.745-.688 1.434-.688 1.434s-.297-.708-.651-1.434L8.831 5.896h-1.88z"></path> </svg>
+HN
+</a> </div> </div> <!-- Tags at bottom --> <div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-800"> <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Tags:</p> <div class="flex flex-wrap gap-2"> <span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#lld </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#machine-coding </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#object-oriented-design </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#python </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#storage </span><span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+#distributed-systems </span> </div> </div> <section class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800"><h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+Related Posts
+</h2><div class="space-y-4"><a href="/blog/2025-02-14-lld-load-balancer" class="block p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Design a Load Balancer: Algorithms, Health Checks, and Session Persistence</h3><p class="text-gray-600 dark:text-gray-400 text-sm mb-2">A low-level design walkthrough of a load balancer covering round-robin, weighted, least-connections, and IP-hash algorithms, health checking, and the sticky sessions trade-off.</p><div class="flex gap-2 flex-wrap"><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">lld</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">machine-coding</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">object-oriented-design</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">python</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">distributed-systems</span></div></a><a href="/blog/2022-10-20-lld-vending-machine" class="block p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Design a Vending Machine: State Machines in Practice</h3><p class="text-gray-600 dark:text-gray-400 text-sm mb-2">A first-principles LLD walkthrough of a vending machine using the State pattern. Covers state transitions, inventory management, payment handling, and why State beats if/else chains when behavior must vary by state.</p><div class="flex gap-2 flex-wrap"><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">lld</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">machine-coding</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">object-oriented-design</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">python</span></div></a><a href="/blog/2023-03-08-lld-atm-machine" class="block p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"><h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">Design an ATM Machine: Transactions, State, and Security in LLD</h3><p class="text-gray-600 dark:text-gray-400 text-sm mb-2">A first-principles LLD walkthrough of an ATM covering state management, transaction types, card and account entities, cash dispensing logic, and why atomicity matters even in a machine-coding exercise.</p><div class="flex gap-2 flex-wrap"><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">lld</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">machine-coding</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">object-oriented-design</span><span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">python</span></div></a></div></section> <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800"> <a href="/blog" class="text-blue-600 dark:text-blue-400 hover:underline">
+← Back to all posts
+</a> </div> </article> <div class="bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 py-8 mt-12"> <div class="max-w-4xl mx-auto px-4"> <div class="text-center mb-6"> <h2 class="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Let's Connect! 💬</h2> <p class="text-base text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
+Whether you're looking to hire, want to collaborate on a project, or just want to chat about tech—I'd love to hear from you!
+</p> </div> <div class="flex flex-col sm:flex-row items-center justify-center gap-6"> <astro-island uid="ZC9c4W" prefix="r1" component-url="/_astro/ContactForm.DeBm0i4w.js" component-export="default" renderer-url="/_astro/client.AE0akZX9.js" props="{}" ssr client="load" opts="{&quot;name&quot;:&quot;ContactForm&quot;,&quot;value&quot;:true}"></astro-island> <div class="flex items-center gap-4"> <div class="h-8 w-px bg-gray-300 dark:bg-gray-700 hidden sm:block"></div> <p class="text-gray-600 dark:text-gray-400 text-sm hidden sm:block">or find me on</p> </div> <div class="flex gap-4"> <a href="https://github.com/anudeepsamaiya" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="GitHub"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/github.svg" alt="GitHub" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://twitter.com/anudeepsamaiya" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="X (Twitter)"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/x.svg" alt="X (Twitter)" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://www.linkedin.com/in/anudeepsamaiya/" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="LinkedIn"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/linkedin.svg" alt="LinkedIn" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://stackoverflow.com/users/2079692/anudeep-samaiya" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="Stack Overflow"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/stackoverflow.svg" alt="Stack Overflow" class="w-6 h-6 opacity-60 dark:invert"> </a> <a href="https://leetcode.com/anudeepsamaiya/" target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="LeetCode"> <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/leetcode.svg" alt="LeetCode" class="w-6 h-6 opacity-60 dark:invert"> </a> </div> </div> </div> </div>  </main> <footer class="py-6 px-4 border-t border-gray-200 dark:border-gray-800"> <div class="max-w-4xl mx-auto text-center text-gray-600 dark:text-gray-400 text-sm"> <p class="mb-2"> © 2018-2026 Anudeep Samaiya. All rights reserved. </p> <p>
+Code:
+<a href="https://github.com/anudeepsamaiya/anudeepsamaiya.github.io/blob/master/LICENSE" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline mx-1">
+MIT License
+</a>
+| Content:
+<a href="https://github.com/anudeepsamaiya/anudeepsamaiya.github.io/blob/master/LICENSE-CONTENT" target="_blank" rel="noopener noreferrer" class="text-blue-600 dark:text-blue-400 hover:underline mx-1">
+CC BY 4.0
+</a> </p> </div> </footer> </div> </body></html> 
