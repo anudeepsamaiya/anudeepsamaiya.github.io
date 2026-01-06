@@ -17,9 +17,7 @@ export default defineConfig({
   integrations: [
     tailwind(),
     react(),
-    sitemap({
-      xslURL: '/sitemap.xsl',
-    }),
+    sitemap(),
   ],
   output: 'static',
 });
