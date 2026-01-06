@@ -63,7 +63,7 @@ export default function ContactForm() {
     }
   }, [captchaLoaded, showForm]);
 
-  const handleCaptchaVerify = (token: string) => {
+  const handleCaptchaVerify = () => {
     setCaptchaVerified(true);
     setError("");
   };
@@ -85,15 +85,16 @@ export default function ContactForm() {
       return;
     }
 
-    // Validate captcha
+    // Check reCAPTCHA verification
     if (!captchaVerified) {
       setError("Please complete the reCAPTCHA verification");
       return;
     }
 
-    // Success - show contact info
-    // TODO: Store form data (name, email, company) to backend/service
+    // TODO: Send to backend for storage
     console.log("Form submitted:", { userName, userEmail, userCompany });
+
+    // Success - show contact info
     setShowContact(true);
   };
 
