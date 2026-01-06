@@ -86,7 +86,6 @@ anudeepsamaiya.github.io/
 ├── astro.config.mjs         # Astro configuration
 ├── tailwind.config.cjs      # TailwindCSS configuration
 ├── tsconfig.json            # TypeScript configuration
-├── CLAUDE.md                # Comprehensive development docs
 └── package.json             # Dependencies and scripts
 ```
 
@@ -311,7 +310,6 @@ If you see a white flash on page load in dark mode, verify the inline script in 
 
 ### Getting Help
 
-- **Development documentation**: See [CLAUDE.md](./CLAUDE.md)
 - **Astro docs**: https://docs.astro.build
 - **Report issues**: [GitHub Issues](https://github.com/anudeepsamaiya/anudeepsamaiya.github.io/issues)
 
