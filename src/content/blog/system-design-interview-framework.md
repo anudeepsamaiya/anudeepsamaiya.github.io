@@ -1,78 +1,68 @@
 ---
 title: "How I Approach System Design Interviews: A Framework That Actually Works"
-description: "I'm sharing the exact framework I use to tackle system design interviews. We'll walk through designing a URL shortener together, covering everything from requirements to scaling strategies."
+description: "The framework I use to tackle system design interviews, demonstrated through designing a URL shortener from requirements to scaling strategies."
 pubDate: 2026-01-06
 tags: ["system-design", "interviews", "architecture", "scaling", "backend"]
 draft: false
 ---
 
-Hey there! If you're reading this, chances are you've got a system design interview coming up and you're feeling a bit nervous about it. I totally get it—I've been there.
+System design interviews are challenging. Unlike coding interviews where you write actual code, you're expected to architect entire systems while explaining your thinking out loud. The questions are deliberately open-ended, which makes it hard to know where to start.
 
-System design interviews can feel overwhelming. Unlike coding interviews where you're writing actual code, here you're expected to architect entire systems on a whiteboard while explaining your thinking out loud. The worst part? The questions are so open-ended that you're often left wondering, "Wait, where do I even start?"
+This framework helped me navigate these interviews systematically. I'll demonstrate it by designing a URL shortener (like bit.ly), walking through each step with concrete examples you can apply to any system design problem.
 
-I want to share the framework that helped me get through these interviews without panicking. We're going to walk through this together using a URL shortener (like bit.ly) as our example. By the end of this post, you'll have a repeatable approach you can use for any system design problem.
+## Why URL Shortener as an Example?
 
-## Why Am I Using URL Shortener as an Example?
+I picked URL shorteners because they're deceptively simple. Everyone has used short links, but building one involves interesting technical challenges around distributed systems, caching, and database design. Interviewers frequently use this problem because it covers core concepts without being overwhelming.
 
-Great question! I picked URL shorteners because:
-- **Everyone gets them** - we've all used short links
-- **They look simple** - but actually involve some really cool technical challenges
-- **Interviewers love them** - seriously, this question comes up all the time
-- **They cover the basics** - touching on most concepts you'll need
+## The Framework: RUDE-CAT
 
-## My Framework: RUDE-CAT
+The name is easy to remember. Here's what it stands for:
 
-I know, weird name right? But it's stuck with me because it's easy to remember. Here's what it stands for:
-
-1. **R**equirements - What are we actually building?
-2. **U**sage Estimates - How much traffic are we talking about?
-3. **D**ata Model & API Design - What do our interfaces look like?
-4. **E**ntity Relationships & Storage - How do we store this stuff?
-5. **C**omponent Design - What does the architecture look like?
-6. **A**dvanced Topics - How do we make it fast and reliable?
-7. **T**rade-offs & Bottlenecks - What could go wrong?
-
-Let me walk you through each step.
+1. **R**equirements - What are we building?
+2. **U**sage Estimates - Expected traffic and scale
+3. **D**ata Model & API Design - Interface design
+4. **E**ntity Relationships & Storage - Data storage strategy
+5. **C**omponent Design - System architecture
+6. **A**dvanced Topics - Performance and reliability
+7. **T**rade-offs & Bottlenecks - What can fail
 
 ---
 
-## Step 1: Requirements (Spend ~15% of your time here)
+## Step 1: Requirements (~15% of interview time)
 
-Here's my first big tip: **Never jump straight into designing**. I've made this mistake before, and trust me, it doesn't go well. Always start by clarifying what you're building.
+**Never jump straight into designing.** I've made this mistake before. Always start by clarifying requirements—it prevents you from solving the wrong problem.
 
-### What Should It Actually Do?
+### Functional Requirements
 
-For our URL shortener, I'd ask these questions:
+For a URL shortener, I clarify these features:
 
-1. Can users turn long URLs into short ones? (obviously yes)
-2. When someone clicks a short link, do we redirect them? (yep)
-3. Can users pick custom short URLs? (maybe - ask the interviewer!)
-4. Do we need analytics? Click counts, locations, that sort of thing? (nice to have)
-5. Should links expire after some time? (let's discuss)
+1. URL shortening: users provide a long URL and receive a short code
+2. Redirect: short URLs redirect to the original long URL
+3. Custom aliases: can users choose their own short codes?
+4. Analytics: do we track click counts, locations, referrers?
+5. Expiration: should links have a TTL?
 
-**Pro tip from experience:** Start with the core features (1-2), then bring up the optional ones based on how much time you have.
+Start with core features (1-2), then discuss optional ones based on remaining time.
 
-### How Should It Perform?
+### Non-Functional Requirements
 
-This is where I talk about the "ilities" - availability, reliability, scalability, you know the drill.
+For a URL shortener, I prioritize:
+- **High availability** (99.9% uptime) - dead links damage user trust
+- **Low latency** (under 100ms for redirects) - users expect instant redirects
+- **Scalability** - must handle millions of URLs and billions of clicks
+- **Durability** - links shouldn't disappear once created
 
-For a URL shortener, here's what I care about:
-- **High availability** (99.9% uptime) - dead links look really bad
-- **Low latency** (under 100ms for redirects) - nobody waits for redirects
-- **Scalability** - needs to handle millions of URLs and billions of clicks
-- **Durability** - once I create a link, it shouldn't disappear
-
-**Here's something I learned:** For this system, availability and speed matter way more than perfect consistency. If your analytics are slightly delayed by a few seconds, that's totally fine. But if the redirect is slow or the service is down? That's a problem.
+For this system, availability and speed matter more than perfect consistency. Analytics can tolerate slight delays, but slow or failed redirects are unacceptable.
 
 ---
 
-## Step 2: Usage Estimates (Spend ~10% of your time here)
+## Step 2: Usage Estimates (~10% of interview time)
 
-Okay, this is where we do some quick math. Don't overthink it—rough estimates are fine. I promise your interviewer isn't checking your arithmetic with a calculator.
+Time for capacity planning. Rough estimates are fine—interviewers care about your approach, not precise arithmetic.
 
-### Let's Estimate the Scale
+### Scale Assumptions
 
-Here's what I'd assume:
+Starting assumptions:
 - 100 million new URLs created per month
 - 100:1 read-to-write ratio (way more redirects than new URLs)
 - URLs are stored forever (we can discuss deletion later)
@@ -100,27 +90,27 @@ Each URL entry needs:
 - Metadata: ~100 bytes (timestamps, user info, etc.)
 - Total: roughly 600 bytes per URL
 
-So for storage:
+Storage over time:
 - Year 1: 100M × 12 months × 600 bytes = 720 GB
 - Year 5: about 3.6 TB
-- With replication (let's say 3 copies): ~11 TB total
+- With 3x replication: ~11 TB total
 
-For caching (remember that 80/20 rule?):
-- Cache top 20% of URLs: ~200 GB per year
+Cache size (80/20 rule - 20% of URLs drive 80% of traffic):
+- Cache top 20%: ~200 GB per year
 ```
 
-**My advice:** Don't stress about exact numbers. Show that you can think about scale. Round liberally, use powers of 10, and keep moving forward.
+Round liberally and use powers of 10. The goal is demonstrating that you think about scale systematically.
 
 ---
 
-## Step 3: Data Model & API Design (Spend ~15% of your time here)
+## Step 3: Data Model & API Design (~15% of interview time)
 
-Now let's talk about what our APIs look like. I like to keep things simple and RESTful.
+I keep the API design simple and RESTful.
 
-### The APIs I'd Design
+### API Design
 
 ```
-1. Create a short URL
+1. Create Short URL
 POST /api/v1/urls
 {
   "long_url": "https://example.com/very/long/path",
@@ -135,11 +125,11 @@ Response:
   "created_at": "2026-01-06T10:00:00Z"
 }
 
-2. Redirect (this is the important one!)
+2. Redirect
 GET /:shortCode
-→ Returns 302 redirect to the long URL
+→ Returns 302 redirect to long URL
 
-3. Get analytics (if we're doing this)
+3. Analytics
 GET /api/v1/urls/:shortCode/stats
 {
   "short_url": "https://short.ly/abc123",
@@ -148,14 +138,14 @@ GET /api/v1/urls/:shortCode/stats
   "top_locations": [...]
 }
 
-4. Delete a URL
+4. Delete URL
 DELETE /api/v1/urls/:shortCode
 ```
 
-### How I'd Structure the Database
+### Database Schema
 
 ```sql
--- Main table for our URLs
+-- URL mappings
 CREATE TABLE urls (
   id BIGSERIAL PRIMARY KEY,
   short_code VARCHAR(10) UNIQUE NOT NULL,
@@ -169,7 +159,7 @@ CREATE TABLE urls (
   INDEX idx_user_id (user_id)
 );
 
--- Separate table for analytics (keeps things cleaner)
+-- Analytics tracking
 CREATE TABLE clicks (
   id BIGSERIAL PRIMARY KEY,
   short_code VARCHAR(10) NOT NULL,
@@ -184,45 +174,45 @@ CREATE TABLE clicks (
 );
 ```
 
-**Why I designed it this way:**
-- `short_code` is VARCHAR(10) because that gives us 62^10 possible combinations (plenty!)
-- Separate `clicks` table so analytics don't slow down our main redirects
-- Indexes on `short_code` for lightning-fast lookups
+Design rationale:
+- `short_code` VARCHAR(10) provides 62^10 possible combinations
+- Separate `clicks` table prevents analytics writes from blocking redirects
+- Index on `short_code` enables fast lookups
 
 ---
 
-## Step 4: Choosing the Right Database (Spend ~10% of your time here)
+## Step 4: Database Selection (~10% of interview time)
 
-### My Take on Database Selection
+### Choosing the Database
 
-**For storing URLs, I'd start with PostgreSQL:**
-- ACID guarantees (no data loss!)
-- Great indexing for fast lookups
-- Can handle joins if we need analytics
-- Battle-tested and reliable
+**Start with PostgreSQL:**
+- ACID guarantees prevent data loss
+- Excellent indexing for fast lookups
+- Supports joins for analytics queries
+- Proven reliability at scale
 
-**But if scale gets crazy (like 10K+ writes/second), I'd consider NoSQL:**
-- Something like Cassandra or DynamoDB
+**Consider NoSQL at 10K+ writes/second:**
+- Cassandra or DynamoDB
 - Better horizontal scaling
-- Eventually consistent (which is fine for us)
-- Perfect for key-value lookups
+- Eventually consistent model works for this use case
+- Optimized for key-value lookups
 
-**My recommendation:** Start with Postgres. It's simpler, and you can always move to NoSQL later if you need to.
+Start simple with Postgres. Migration to NoSQL is straightforward if needed later.
 
-### How Would I Shard This?
+### Sharding Strategy
 
-When a single database can't handle the load, here are my options:
+When a single database reaches capacity:
 
 ```
 Option 1: Hash-based sharding
 - shard_id = hash(short_code) % num_shards
-- ✅ Even distribution of data
-- ❌ Hard to add more shards later
+- ✅ Even distribution
+- ❌ Resharding is complex
 
 Option 2: Range-based sharding
 - Shard by creation date
-- ✅ Easy to add new shards
-- ❌ New shards get all the writes (uneven)
+- ✅ Easy to add shards
+- ❌ Write hotspots on newest shard
 
 Option 3: Geographic sharding
 - Shard by user location
@@ -230,15 +220,15 @@ Option 3: Geographic sharding
 - ❌ Uneven distribution
 ```
 
-**What I'd pick:** Hash-based sharding on `short_code` for even distribution.
+Hash-based sharding on `short_code` provides the most even distribution.
 
 ---
 
-## Step 5: Component Design (This is the Big One - Spend ~30% of your time here)
+## Step 5: Component Design (~30% of interview time)
 
-Alright, this is where we draw the architecture. Let me show you how I'd design this system.
+This is where you design the architecture and explain how components interact.
 
-### My High-Level Architecture
+### High-Level Architecture
 
 ```
                     Users
@@ -270,49 +260,49 @@ Alright, this is where we draw the architecture. Let me show you how I'd design 
     └────────┘  └─────────┘  └──────────┘
 ```
 
-### What Each Component Does
+### Component Responsibilities
 
 **Load Balancer:**
-- Spreads traffic across web servers
-- Checks if servers are healthy
-- Handles SSL termination
-- Protects against DDoS attacks
+- Distributes traffic across web servers
+- Health checking
+- SSL termination
+- DDoS protection
 
-**Web Servers (stateless is key!):**
-- Handle incoming HTTP requests
-- Route to the right API endpoints
-- Serve any static content
+**Web Servers (stateless):**
+- Handle HTTP requests
+- Route to API endpoints
+- Serve static content
 
 **App Servers:**
-- This is where the magic happens
 - Generate short codes
 - Validate URLs
-- Talk to the database
+- Database operations
+- Business logic
 
 **Redis Cache:**
-- Cache the hot URLs (remember 80/20 rule?)
-- Keep stuff for 24 hours
+- Cache frequently accessed URLs
+- 24-hour TTL
 - Reduces database load by 80%+
 
 **PostgreSQL:**
-- Stores everything
-- Master for writes, replicas for reads
-- Master-slave replication
+- Persistent storage
+- Master handles writes
+- Read replicas for queries
 
 **Analytics Queue:**
-- Process clicks asynchronously
-- Don't block the redirect!
-- Batch writes to analytics DB
+- Asynchronous click processing
+- Batch writes to analytics database
+- Prevents blocking redirects
 
 ---
 
-## Step 6: Advanced Topics (Spend ~15% of your time here)
+## Step 6: Advanced Topics (~15% of interview time)
 
-Now let's talk about the interesting stuff that makes this system really work.
+Deep dive into critical implementation details.
 
-### How Do We Generate Short Codes?
+### Short Code Generation
 
-This is one of my favorite parts! I've seen three main approaches:
+Three approaches to consider:
 
 **Approach 1: Hashing**
 ```python
@@ -330,9 +320,9 @@ def generate_short_code(long_url):
     return short_code
 ```
 ✅ Same URL always gets same short code
-❌ Need collision handling
+❌ Requires collision handling
 
-**Approach 2: Counter (my favorite!)**
+**Approach 2: Counter-based**
 ```python
 def generate_short_code():
     # Get next counter from distributed service
@@ -343,8 +333,8 @@ def generate_short_code():
 
     return short_code
 ```
-✅ No collisions ever
-❌ Predictable (sequential)
+✅ No collisions
+❌ Predictable sequence
 
 **Approach 3: Random**
 ```python
@@ -356,13 +346,13 @@ def generate_short_code():
             return short_code
 ```
 ✅ Unpredictable and simple
-❌ Might need multiple DB checks
+❌ Multiple database checks possible
 
-**What I'd use:** Approach 2 (counter-based) with ZooKeeper or Redis to manage counters across servers.
+Counter-based generation with ZooKeeper or Redis for distributed counter management provides the best balance.
 
-### My Caching Strategy
+### Caching Strategy
 
-Here's how I'd implement caching:
+Implementation:
 
 ```
 When a redirect request comes in:
@@ -381,34 +371,32 @@ Size: ~200 GB (stores about 300M URLs)
 Expected hit rate: ~85%
 ```
 
-This dramatically reduces database load. Most requests never touch the database!
+This reduces database load significantly—most requests never touch the database.
 
-### Handling Analytics Without Slowing Down Redirects
+### Analytics Processing
 
-Here's a big one—we don't want analytics to block redirects:
+Asynchronous analytics to avoid blocking redirects:
 
 ```
-My approach:
+Flow:
 
 1. User visits short URL
-2. Immediately redirect (don't wait!)
+2. Immediately redirect
 3. Fire event to message queue (Kafka/RabbitMQ)
 4. Worker processes batch events
 5. Batch insert to analytics DB
 
-Result:
+Benefits:
 - Redirect latency: <50ms
-- Can aggregate before writing
-- Can replay if analytics DB fails
+- Event aggregation before writes
+- Replay capability if analytics DB fails
 ```
 
-### Preventing Abuse
+### Rate Limiting
 
-I'd add rate limiting:
+Using Redis with token bucket algorithm:
 
 ```
-Using Redis + Token Bucket:
-
 if redis.get(ip + ':minute') > 100:
     return 429 Too Many Requests
 else:
@@ -416,29 +404,27 @@ else:
     redis.expire(ip + ':minute', 60)
 ```
 
-Simple but effective!
-
 ---
 
-## Step 7: Trade-offs & Bottlenecks (Spend ~5% of your time here)
+## Step 7: Trade-offs & Bottlenecks (~5% of interview time)
 
-Let's wrap up by discussing what could go wrong.
+Discuss potential failure modes and design trade-offs.
 
-### Potential Bottlenecks I'd Watch Out For
+### Potential Bottlenecks
 
 1. **Database writes at massive scale**
-   → Solution: Shard the database, consider NoSQL
+   → Shard database or migrate to NoSQL
 
-2. **Counter service becomes single point of failure**
-   → Solution: Pre-allocate ranges to each server
+2. **Counter service single point of failure**
+   → Pre-allocate counter ranges to each server
 
-3. **Hot URLs overwhelming the cache**
-   → Solution: Add CDN layer, multiple cache replicas
+3. **Hot URLs overwhelming cache**
+   → Add CDN layer with multiple cache replicas
 
 4. **High latency for global users**
-   → Solution: Multi-region deployment
+   → Multi-region deployment with geo-routing
 
-### Trade-offs I Made
+### Design Trade-offs
 
 | Decision | Trade-off |
 |----------|-----------|
@@ -449,20 +435,20 @@ Let's wrap up by discussing what could go wrong.
 
 ---
 
-## Common Mistakes I've Seen (and Made!)
+## Common Mistakes to Avoid
 
-1. **Jumping to solutions** without asking questions first
-2. **Over-engineering** for scale you don't need yet
-3. **Ignoring failure modes** - what if the DB goes down?
-4. **Forgetting to estimate** scale and capacity
-5. **Not explaining trade-offs** - always explain why you chose something
-6. **Drawing boxes** without explaining what they do
+1. **Jumping to solutions** without clarifying requirements
+2. **Over-engineering** for unnecessary scale
+3. **Ignoring failure modes** and recovery strategies
+4. **Skipping capacity estimates**
+5. **Not explaining trade-offs** behind decisions
+6. **Drawing boxes** without explaining their purpose
 
 ---
 
-## My Interview Timeline
+## Time Management
 
-For a 45-minute interview, here's how I'd budget my time:
+For a 45-minute interview:
 
 - **0-7 min:** Requirements & clarifications
 - **7-12 min:** Capacity estimates
@@ -471,51 +457,45 @@ For a 45-minute interview, here's how I'd budget my time:
 - **35-40 min:** Deep dive (caching, encoding, scaling)
 - **40-45 min:** Trade-offs & Q&A
 
-**Always** leave time for questions at the end!
+Reserve time for interviewer questions at the end.
 
 ---
 
-## Using This Framework for Other Problems
+## Applying RUDE-CAT to Other Problems
 
-The beauty of RUDE-CAT is that it works for everything:
+The framework adapts to any system design problem:
 
-- **Design Instagram?** Focus on image storage, feed generation
-- **Design Netflix?** Emphasize video encoding, CDN strategy
-- **Design Uber?** Highlight geo-spatial indexing, matching algorithms
-- **Design WhatsApp?** Prioritize WebSockets, message queues
+- **Instagram:** Image storage, feed generation, content delivery
+- **Netflix:** Video encoding, CDN strategy, recommendation systems
+- **Uber:** Geo-spatial indexing, driver matching, real-time updates
+- **WhatsApp:** WebSocket connections, message queues, end-to-end encryption
 
-The steps stay the same. Just the details change.
+The steps remain constant. Only the implementation details change.
 
 ---
 
 ## Final Thoughts
 
-Look, I'll be honest with you—there's no perfect answer in system design interviews. Interviewers aren't looking for a textbook solution. They want to see how you think, how you handle trade-offs, and how you communicate complex ideas.
+System design interviews don't have perfect answers. Interviewers evaluate your thinking process, how you handle trade-offs, and your ability to communicate complex technical concepts clearly.
 
-The framework I shared here has helped me stay calm and organized during interviews. It gives me a roadmap when I feel lost.
+This framework helps me stay organized under pressure. It provides structure when the problem feels overwhelming.
 
-My advice? Practice with this framework on different problems. Draw the diagrams. Explain your thinking out loud. Time yourself. The more you practice, the more natural it becomes.
+Practice this framework on various problems. Draw diagrams. Explain your reasoning out loud. Time yourself. With repetition, the process becomes natural.
 
-You've got this! And if you found this helpful, I'd love to hear about it. Feel free to reach out on [Twitter](https://twitter.com/anudeepsamaiya) or [LinkedIn](https://www.linkedin.com/in/anudeepsamaiya/). I'm always happy to chat about system design or interview prep.
-
-Good luck with your interviews! 🚀
+Reach out on [Twitter](https://twitter.com/anudeepsamaiya) or [LinkedIn](https://www.linkedin.com/in/anudeepsamaiya/) if you want to discuss system design or interview preparation.
 
 ---
 
-## Resources That Helped Me
+## Resources
 
-**Books I recommend:**
-- "Designing Data-Intensive Applications" by Martin Kleppmann (this one's gold!)
-- "System Design Interview" by Alex Xu (great for interview prep)
+**Books:**
+- "Designing Data-Intensive Applications" by Martin Kleppmann
+- "System Design Interview" by Alex Xu
 
-**Websites that helped:**
+**Online Resources:**
 - [System Design Primer on GitHub](https://github.com/donnemartin/system-design-primer)
 - [Grokking the System Design Interview](https://www.educative.io/courses/grokking-the-system-design-interview)
 
-**Practice platforms:**
+**Practice Platforms:**
 - [LeetCode System Design](https://leetcode.com/discuss/interview-question/system-design)
-- [Pramp](https://www.pramp.com/) for mock interviews with peers
-
----
-
-*Working on a system design problem? Stuck somewhere? Drop me a comment or reach out—I'd love to help!*
+- [Pramp](https://www.pramp.com/) - Mock interviews with peers

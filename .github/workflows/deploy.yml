@@ -14,9 +14,6 @@ concurrency:
   group: "pages"
   cancel-in-progress: false
 
-env:
-  PUBLIC_RECAPTCHA_SITE_KEY: ${{ secrets.RECAPTCHA_SITE_KEY }}
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -26,6 +23,8 @@ jobs:
 
       - name: Install, build, and upload your site
         uses: withastro/action@v3
+        env:
+          PUBLIC_RECAPTCHA_SITE_KEY: ${{ secrets.RECAPTCHA_SITE_KEY }}
 
   deploy:
     needs: build
