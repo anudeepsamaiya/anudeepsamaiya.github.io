@@ -2,6 +2,8 @@
 import { getCollection } from "astro:content";
 import type { CollectionEntry } from "astro:content";
 import Layout from "@layouts/Layout.astro";
+import RelatedPosts from "@components/RelatedPosts.astro";
+import ConnectSection from "@components/ConnectSection.astro";
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
@@ -51,13 +53,17 @@ const { Content } = await post.render();
       <Content />
     </div>
 
-    <footer class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
+    <RelatedPosts currentPost={post} />
+
+    <div class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
       <a
         href="/blog"
         class="text-blue-600 dark:text-blue-400 hover:underline"
       >
         ← Back to all posts
       </a>
-    </footer>
+    </div>
   </article>
+
+  <ConnectSection />
 </Layout>

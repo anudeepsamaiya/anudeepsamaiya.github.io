@@ -1,0 +1,61 @@
+---
+import { getCollection } from "astro:content";
+import type { CollectionEntry } from "astro:content";
+
+interface Props {
+  currentPost: CollectionEntry<"blog">;
+}
+
+const { currentPost } = Astro.props;
+
+// Get all published posts
+const allPosts = await getCollection("blog");
+const publishedPosts = allPosts.filter((post) => !post.data.draft);
+
+// Calculate related posts based on shared tags
+const relatedPosts = publishedPosts
+  .filter((post) => post.slug !== currentPost.slug)
+  .map((post) => {
+    const sharedTags = post.data.tags.filter((tag) =>
+      currentPost.data.tags.includes(tag)
+    );
+    return {
+      post,
+      score: sharedTags.length,
+      sharedTags,
+    };
+  })
+  .filter((item) => item.score > 0)
+  .sort((a, b) => b.score - a.score)
+  .slice(0, 3);
+---
+
+{relatedPosts.length > 0 && (
+  <section class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
+    <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-white">
+      Related Posts
+    </h2>
+    <div class="space-y-4">
+      {relatedPosts.map(({ post, sharedTags }) => (
+        <a
+          href={`/blog/${post.slug}`}
+          class="block p-4 rounded-lg bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+        >
+          <h3 class="text-lg font-semibold mb-2 text-gray-900 dark:text-white">
+            {post.data.title}
+          </h3>
+          <p class="text-gray-600 dark:text-gray-400 text-sm mb-2">
+            {post.data.description}
+          </p>
+          <div class="flex gap-2 flex-wrap">
+            {sharedTags.map((tag) => (
+              <span class="text-xs px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded">
+                {tag}
+              </span>
+            ))}
+          </div>
+        </a>
+      ))}
+    </div>
+  </section>
+)}
