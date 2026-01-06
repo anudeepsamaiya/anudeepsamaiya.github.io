@@ -1,0 +1,63 @@
+---
+import { getCollection } from "astro:content";
+import type { CollectionEntry } from "astro:content";
+import Layout from "@layouts/Layout.astro";
+
+export async function getStaticPaths() {
+  const posts = await getCollection("blog");
+  return posts
+    .filter((post) => !post.data.draft)
+    .map((post) => ({
+      params: { slug: post.slug },
+      props: { post },
+    }));
+}
+
+interface Props {
+  post: CollectionEntry<"blog">;
+}
+
+const { post } = Astro.props;
+const { Content } = await post.render();
+---
+
+<Layout title={post.data.title} description={post.data.description}>
+  <article class="max-w-4xl mx-auto px-4 py-12">
+    <header class="mb-8">
+      <h1 class="text-4xl font-bold mb-4 text-gray-900 dark:text-white">
+        {post.data.title}
+      </h1>
+      <div class="flex items-center gap-4 text-gray-600 dark:text-gray-400">
+        <time>
+          {post.data.pubDate.toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+        </time>
+        {post.data.tags.length > 0 && (
+          <div class="flex gap-2">
+            {post.data.tags.map((tag) => (
+              <span class="text-sm px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded">
+                {tag}
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    </header>
+
+    <div class="prose prose-lg dark:prose-invert max-w-none">
+      <Content />
+    </div>
+
+    <footer class="mt-12 pt-8 border-t border-gray-200 dark:border-gray-800">
+      <a
+        href="/blog"
+        class="text-blue-600 dark:text-blue-400 hover:underline"
+      >
+        ← Back to all posts
+      </a>
+    </footer>
+  </article>
+</Layout>

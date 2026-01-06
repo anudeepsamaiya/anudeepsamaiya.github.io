@@ -1,0 +1,63 @@
+# NOTICE
+
+This project uses the following open-source software:
+
+## Astro
+- License: MIT
+- Repository: https://github.com/withastro/astro
+- Copyright (c) 2021-present Astro Technology Company
+
+## React
+- License: MIT
+- Repository: https://github.com/facebook/react
+- Copyright (c) Meta Platforms, Inc. and affiliates.
+
+## TailwindCSS
+- License: MIT
+- Repository: https://github.com/tailwindlabs/tailwindcss
+- Copyright (c) Tailwind Labs, Inc.
+
+## TypeScript
+- License: Apache-2.0
+- Repository: https://github.com/microsoft/TypeScript
+- Copyright (c) Microsoft Corporation
+
+## Dependencies
+
+For a complete list of all dependencies and their licenses, please run:
+```bash
+npm list --depth=0
+```
+
+To view the full license text for each dependency, check the `node_modules` directory or visit the respective package repositories.
+
+## Badge Services
+
+This site uses external badge services from:
+- shields.io - Public domain / CC0
+- jsdelivr.net - Free CDN service
+
+## GitHub Stats Widgets
+
+This site displays GitHub statistics using:
+- github-readme-stats (vercel.app) - MIT License
+- github-readme-streak-stats (herokuapp.com) - MIT License
+
+---
+
+## Content License
+
+**Blog Content License:**
+- All blog posts, articles, and original written content are licensed under the **Creative Commons Attribution 4.0 International License (CC BY 4.0)**
+- Copyright (c) 2018-present Anudeep Samaiya
+- See [LICENSE-CONTENT](./LICENSE-CONTENT) for full license text
+- Human-readable summary: https://creativecommons.org/licenses/by/4.0/
+
+**What this means:**
+- You are free to share and adapt the content
+- You must give appropriate credit and indicate if changes were made
+- You may use the content for commercial purposes
+
+**Code License:**
+- All source code, scripts, and technical implementations are licensed under the **MIT License**
+- See [LICENSE](./LICENSE) for full license text

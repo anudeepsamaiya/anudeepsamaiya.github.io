@@ -1,0 +1,246 @@
+---
+import Layout from "@layouts/Layout.astro";
+import ContactForm from "@components/ContactForm";
+import {
+  languages,
+  frameworks,
+  databases,
+  cloud,
+  ides,
+} from "@data/skills";
+import { SOCIALS } from "@/config";
+---
+
+<Layout title="About">
+  <article class="max-w-4xl mx-auto px-4 py-12">
+    <div class="prose prose-lg dark:prose-invert max-w-none">
+
+      <!-- Hero Section -->
+      <div class="mb-12">
+        <h1 class="text-5xl font-bold mb-4 text-gray-900 dark:text-white">
+          Hi there! I'm Anudeep Samaiya👋
+        </h1>
+        <p class="text-2xl text-gray-600 dark:text-gray-400 mb-2">
+          Backend Engineer who loves building things that scale
+        </p>
+        <p class="text-lg text-gray-500 dark:text-gray-500">
+          📍 Based in Bengaluru, India
+        </p>
+      </div>
+
+      <!-- What I Do -->
+      <section class="mb-12">
+        <h2 class="text-3xl font-bold mb-6 text-gray-900 dark:text-white">What I Do</h2>
+
+        <p class="text-lg text-gray-700 dark:text-gray-300 mb-6">
+          I'm a backend engineer who gets excited about solving complex problems at scale. My day-to-day involves
+          building APIs that don't break, optimizing databases that handle millions of records, and designing systems
+          that actually work when things go wrong (because they always do, right?).
+        </p>
+
+        <p class="text-lg text-gray-700 dark:text-gray-300 mb-6">
+          I've spent most of my career working with Python and Django, but lately I've been having a lot of fun
+          with Go for high-performance services. There's something satisfying about writing code that's fast,
+          reliable, and doesn't make you wake up at 3 AM.
+        </p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 my-8">
+          <div class="p-5 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-800 dark:to-gray-700 rounded-lg border border-blue-200 dark:border-gray-600">
+            <div class="text-3xl mb-2">🚀</div>
+            <h3 class="font-bold text-lg mb-2 text-gray-900 dark:text-white">Backend & APIs</h3>
+            <p class="text-gray-700 dark:text-gray-300">Building scalable REST APIs and microservices with Python, Django, FastAPI, and Go</p>
+          </div>
+
+          <div class="p-5 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-gray-800 dark:to-gray-700 rounded-lg border border-purple-200 dark:border-gray-600">
+            <div class="text-3xl mb-2">📊</div>
+            <h3 class="font-bold text-lg mb-2 text-gray-900 dark:text-white">Data Engineering</h3>
+            <p class="text-gray-700 dark:text-gray-300">Designing ETL pipelines, working with Celery, Kafka, and making data flow smoothly</p>
+          </div>
+
+          <div class="p-5 bg-gradient-to-br from-green-50 to-green-100 dark:from-gray-800 dark:to-gray-700 rounded-lg border border-green-200 dark:border-gray-600">
+            <div class="text-3xl mb-2">⚡</div>
+            <h3 class="font-bold text-lg mb-2 text-gray-900 dark:text-white">Performance & Databases</h3>
+            <p class="text-gray-700 dark:text-gray-300">PostgreSQL optimization, Redis caching, and making queries that don't timeout</p>
+          </div>
+
+          <div class="p-5 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-gray-800 dark:to-gray-700 rounded-lg border border-orange-200 dark:border-gray-600">
+            <div class="text-3xl mb-2">☁️</div>
+            <h3 class="font-bold text-lg mb-2 text-gray-900 dark:text-white">DevOps & Cloud</h3>
+            <p class="text-gray-700 dark:text-gray-300">AWS, Docker, Kubernetes, CI/CD—basically making sure stuff deploys and stays up</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- What I'm Learning -->
+      <section class="mb-12">
+        <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">What I'm Learning Right Now 🌱</h2>
+        <p class="text-lg text-gray-700 dark:text-gray-300 mb-4">
+          I believe in learning continuously (it's the best part of being an engineer!). Here's what's keeping me busy lately:
+        </p>
+        <ul class="space-y-3 text-lg text-gray-700 dark:text-gray-300">
+          <li class="flex items-start">
+            <span class="mr-3">🦀</span>
+            <span><strong>Rust</strong> - Because sometimes you need that extra performance boost and memory safety without the headaches</span>
+          </li>
+          <li class="flex items-start">
+            <span class="mr-3">🔥</span>
+            <span><strong>Performance Testing</strong> - Getting deep into Locust to see how systems behave under pressure</span>
+          </li>
+          <li class="flex items-start">
+            <span class="mr-3">🏗️</span>
+            <span><strong>System Design</strong> - Always learning new patterns and approaches to building distributed systems</span>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Open Source & Writing -->
+      <section class="mb-12">
+        <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Open Source & Writing ✍️</h2>
+        <ul class="space-y-3 text-base text-gray-700 dark:text-gray-300">
+          <li class="flex items-start">
+            <span class="mr-3 text-lg">🤝</span>
+            <span>Contributing to open source projects and always looking for interesting collaborations</span>
+          </li>
+          <li class="flex items-start">
+            <span class="mr-3 text-lg">📝</span>
+            <span>Writing about system design, backend architecture, and lessons learned</span>
+          </li>
+          <li class="flex items-start">
+            <span class="mr-3 text-lg">💡</span>
+            <span>Love discussing Python, Celery, PostgreSQL, distributed systems, and backend topics</span>
+          </li>
+        </ul>
+      </section>
+
+      <!-- Tech Stack & GitHub -->
+      <section class="mb-12">
+        <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">Tech I Work With 🛠️</h2>
+
+        <div class="space-y-3">
+          <!-- Languages -->
+          <div>
+            <h3 class="text-lg font-bold mb-2 text-gray-900 dark:text-white flex items-center">
+              <span class="mr-2">🔨</span> Languages
+            </h3>
+            <div class="flex flex-wrap gap-2">
+              {languages.map((badge) => (
+                <a href={badge.url} target="_blank" rel="noopener noreferrer" class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                  {badge.name}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <!-- Frameworks & Tools -->
+          <div>
+            <h3 class="text-lg font-bold mb-2 text-gray-900 dark:text-white">Frameworks & Tools</h3>
+            <div class="flex flex-wrap gap-2">
+              {frameworks.map((badge) => (
+                <a href={badge.url} target="_blank" rel="noopener noreferrer" class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                  {badge.name}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <!-- Databases -->
+          <div>
+            <h3 class="text-lg font-bold mb-2 text-gray-900 dark:text-white">Database</h3>
+            <div class="flex flex-wrap gap-2">
+              {databases.map((badge) => (
+                <a href={badge.url} target="_blank" rel="noopener noreferrer" class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                  {badge.name}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <!-- Cloud -->
+          <div>
+            <h3 class="text-lg font-bold mb-2 text-gray-900 dark:text-white">Cloud</h3>
+            <div class="flex flex-wrap gap-2">
+              {cloud.map((badge) => (
+                <a href={badge.url} target="_blank" rel="noopener noreferrer" class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                  {badge.name}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <!-- IDEs -->
+          <div>
+            <h3 class="text-lg font-bold mb-2 text-gray-900 dark:text-white">IDEs</h3>
+            <div class="flex flex-wrap gap-2">
+              {ides.map((badge) => (
+                <a href={badge.url} target="_blank" rel="noopener noreferrer" class="px-3 py-1 text-sm bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+                  {badge.name}
+                </a>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- When I'm Not Coding -->
+      <section class="mb-12">
+        <h2 class="text-3xl font-bold mb-4 text-gray-900 dark:text-white">When I'm Not Coding 🎯</h2>
+        <div class="space-y-4 text-lg text-gray-700 dark:text-gray-300">
+          <p>
+            When I step away from the screen, I like to keep moving. You'll often find me 🏃 <strong>running</strong> through Bengaluru,
+            chasing that elusive sub-30 minute 5K—there's something meditative about the rhythm of a good run that helps clear my head.
+          </p>
+          <p>
+            At home, I enjoy solving puzzles, both literal and figurative. My 🧩 <strong>Rubik's Cube</strong> sits on my desk (current PB:
+            just under 3 minutes), I play ♟️ <strong>chess</strong> whenever I can, and there's always a 🔢 <strong>Sudoku</strong> puzzle
+            waiting to be solved. When I'm not puzzling, I'm usually working through a 📚 <strong>good book</strong>—something about economics,
+            math, or ideas that make me see the world differently.
+          </p>
+          <p>
+            I'm also slowly learning 🎸 <strong>guitar</strong>, one chord at a time. And when the weather's nice, I love hopping on my bike
+            and 🚴 <strong>exploring new routes</strong> around the city—it's my favorite way to discover hidden corners of Bengaluru.
+          </p>
+        </div>
+      </section>
+
+    </div>
+  </article>
+
+  <!-- Sticky Contact Bar - sticks to bottom of viewport, settles above footer when scrolled to bottom -->
+  <div class="sticky bottom-0 left-0 right-0 z-40 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 shadow-lg mt-12">
+    <div class="max-w-4xl mx-auto px-4 py-6">
+      <div class="text-center mb-6">
+        <h2 class="text-2xl font-bold mb-3 text-gray-900 dark:text-white">Let's Connect! 💬</h2>
+        <p class="text-base text-gray-600 dark:text-gray-400 max-w-3xl mx-auto">
+          Whether you're looking to hire, want to collaborate on a project, or just want to chat about tech—I'd love to hear from you!
+        </p>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-6">
+        <ContactForm client:load />
+
+        <div class="flex items-center gap-4">
+          <div class="h-8 w-px bg-gray-300 dark:bg-gray-700 hidden sm:block"></div>
+          <p class="text-gray-600 dark:text-gray-400 text-sm hidden sm:block">or find me on</p>
+        </div>
+
+        <div class="flex gap-4">
+          <a href={SOCIALS.github} target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="GitHub">
+            <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/github.svg" alt="GitHub" class="w-6 h-6 opacity-60 dark:invert" />
+          </a>
+          <a href={SOCIALS.twitter} target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="X (Twitter)">
+            <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/x.svg" alt="X (Twitter)" class="w-6 h-6 opacity-60 dark:invert" />
+          </a>
+          <a href={SOCIALS.linkedin} target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="LinkedIn">
+            <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/linkedin.svg" alt="LinkedIn" class="w-6 h-6 opacity-60 dark:invert" />
+          </a>
+          <a href={SOCIALS.stackoverflow} target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="Stack Overflow">
+            <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/stackoverflow.svg" alt="Stack Overflow" class="w-6 h-6 opacity-60 dark:invert" />
+          </a>
+          <a href={SOCIALS.leetcode} target="_blank" rel="noopener noreferrer" class="transition-opacity hover:opacity-70" aria-label="LeetCode">
+            <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/leetcode.svg" alt="LeetCode" class="w-6 h-6 opacity-60 dark:invert" />
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layout>

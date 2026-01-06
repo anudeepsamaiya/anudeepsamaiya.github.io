@@ -1,0 +1,74 @@
+---
+import Layout from "@layouts/Layout.astro";
+import { SITE, SOCIALS } from "@/config";
+---
+
+<Layout>
+  <div class="max-w-4xl mx-auto px-4 py-20">
+    <div class="text-center">
+      <h1 class="text-5xl font-bold mb-4 text-gray-900 dark:text-white">
+        Hi, I'm Anudeep Samaiya 👋
+      </h1>
+      <p class="text-2xl text-gray-600 dark:text-gray-300 mb-8">
+        Backend Developer | Data Engineering | DevOps
+      </p>
+      <p class="text-lg text-gray-700 dark:text-gray-400 mb-12 max-w-2xl mx-auto">
+        {SITE.description}
+      </p>
+
+      <div class="flex justify-center gap-6 mb-12">
+        <a
+          href="/about"
+          class="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+        >
+          About Me
+        </a>
+        <a
+          href="/blog"
+          class="px-6 py-3 bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-white border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors font-medium"
+        >
+          Read Blog
+        </a>
+      </div>
+
+      <div class="flex justify-center gap-6">
+        <a
+          href={SOCIALS.github}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="transition-opacity hover:opacity-70"
+          aria-label="GitHub"
+        >
+          <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/github.svg" alt="GitHub" class="w-8 h-8 opacity-60 dark:invert" />
+        </a>
+        <a
+          href={SOCIALS.twitter}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="transition-opacity hover:opacity-70"
+          aria-label="X (Twitter)"
+        >
+          <img src="https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/x.svg" alt="X (Twitter)" class="w-8 h-8 opacity-60 dark:invert" />
+        </a>
+        <a
+          href={SOCIALS.linkedin}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="transition-opacity hover:opacity-70"
+          aria-label="LinkedIn"
+        >
+          <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/linkedin.svg" alt="LinkedIn" class="w-8 h-8 opacity-60 dark:invert" />
+        </a>
+        <a
+          href={SOCIALS.stackoverflow}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="transition-opacity hover:opacity-70"
+          aria-label="Stack Overflow"
+        >
+          <img src="https://cdn.jsdelivr.net/npm/simple-icons@3.0.1/icons/stackoverflow.svg" alt="Stack Overflow" class="w-8 h-8 opacity-60 dark:invert" />
+        </a>
+      </div>
+    </div>
+  </div>
+</Layout>
