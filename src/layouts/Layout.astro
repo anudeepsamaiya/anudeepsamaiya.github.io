@@ -5,10 +5,14 @@ import ThemeToggle from "@components/ThemeToggle";
 interface Props {
   title?: string;
   description?: string;
+  canonicalURL?: string;
 }
 
-const { title = SITE.title, description = SITE.description } = Astro.props;
+const { title = SITE.title, description = SITE.description, canonicalURL } = Astro.props;
 const pageTitle = title === SITE.title ? title : `${title} | ${SITE.title}`;
+
+// Generate canonical URL: use provided canonicalURL or construct from current URL
+const canonical = canonicalURL || new URL(Astro.url.pathname, SITE.baseUrl).href;
 ---
 
 <!doctype html>
@@ -19,6 +23,8 @@ const pageTitle = title === SITE.title ? title : `${title} | ${SITE.title}`;
     <meta name="description" content={description} />
     <meta name="author" content={SITE.author} />
     <meta name="google-site-verification" content="twVFs_dUxCyldlt-Sif72GezMsXbI0wKJEVTBJ1A22g" />
+
+    <link rel="canonical" href={canonical} />
 
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />

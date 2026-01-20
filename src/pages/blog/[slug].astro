@@ -4,6 +4,7 @@ import type { CollectionEntry } from "astro:content";
 import Layout from "@layouts/Layout.astro";
 import RelatedPosts from "@components/RelatedPosts.astro";
 import ConnectSection from "@components/ConnectSection.astro";
+import { SITE } from "@/config";
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
@@ -21,9 +22,16 @@ interface Props {
 
 const { post } = Astro.props;
 const { Content } = await post.render();
+
+// Generate canonical URL for blog post
+const canonicalURL = `${SITE.baseUrl}/blog/${post.slug}/`;
 ---
 
-<Layout title={post.data.title} description={post.data.description}>
+<Layout
+  title={post.data.title}
+  description={post.data.description}
+  canonicalURL={canonicalURL}
+>
   <article class="max-w-4xl mx-auto px-4 py-12">
     <header class="mb-8">
       <h1 class="text-4xl font-bold mb-4 text-gray-900 dark:text-white">
@@ -37,21 +45,69 @@ const { Content } = await post.render();
             day: "numeric",
           })}
         </time>
-        {post.data.tags.length > 0 && (
-          <div class="flex gap-2">
-            {post.data.tags.map((tag) => (
-              <span class="text-sm px-2 py-1 bg-gray-100 dark:bg-gray-800 rounded">
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
       </div>
     </header>
 
-    <div class="prose prose-lg dark:prose-invert max-w-none">
+    <div class="prose prose-lg dark:prose-invert max-w-none mb-12">
       <Content />
     </div>
+
+    <!-- Social Share Buttons -->
+    <div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-800">
+      <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Share this post:</p>
+      <div class="flex gap-3">
+        <a
+          href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(post.data.title)}&url=${encodeURIComponent(`https://anudeepsamaiya.github.io/blog/${post.slug}/`)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors"
+          aria-label="Share on Twitter"
+        >
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+          Twitter
+        </a>
+        <a
+          href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(`https://anudeepsamaiya.github.io/blog/${post.slug}/`)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg transition-colors"
+          aria-label="Share on LinkedIn"
+        >
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+          </svg>
+          LinkedIn
+        </a>
+        <a
+          href={`https://news.ycombinator.com/submitlink?u=${encodeURIComponent(`https://anudeepsamaiya.github.io/blog/${post.slug}/`)}&t=${encodeURIComponent(post.data.title)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg transition-colors"
+          aria-label="Share on Hacker News"
+        >
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M0 24V0h24v24H0zM6.951 5.896l4.112 7.708v5.064h1.583v-4.972l4.148-7.799h-1.749l-2.457 4.875c-.372.745-.688 1.434-.688 1.434s-.297-.708-.651-1.434L8.831 5.896h-1.88z"/>
+          </svg>
+          HN
+        </a>
+      </div>
+    </div>
+
+    <!-- Tags at bottom -->
+    {post.data.tags.length > 0 && (
+      <div class="mb-8 pb-8 border-b border-gray-200 dark:border-gray-800">
+        <p class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Tags:</p>
+        <div class="flex flex-wrap gap-2">
+          {post.data.tags.map((tag) => (
+            <span class="text-sm px-3 py-1.5 bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
+              #{tag}
+            </span>
+          ))}
+        </div>
+      </div>
+    )}
 
     <RelatedPosts currentPost={post} />
 
@@ -67,3 +123,20 @@ const { Content } = await post.render();
 
   <ConnectSection />
 </Layout>
+
+<style is:global>
+  /* Center-align ASCII diagrams in code blocks */
+  .prose pre {
+    overflow-x: auto;
+  }
+
+  /* Center diagrams that contain box-drawing characters */
+  .prose pre:has(code:contains('┌')),
+  .prose pre:has(code:contains('│')),
+  .prose pre:has(code:contains('▶')),
+  .prose pre:has(code:contains('└')) {
+    text-align: center;
+    display: flex;
+    justify-content: center;
+  }
+</style>
