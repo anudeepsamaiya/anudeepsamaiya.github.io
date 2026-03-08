@@ -224,7 +224,7 @@ export default function ContactForm() {
                   <div className="p-4 bg-green-50 dark:bg-gray-700 rounded-lg">
                     <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">📄 Resume</p>
                     <a
-                      href="https://docs.google.com/document/d/1ouYM4MhTTWZZ91OfkOz8mHzUa5JsjULgrzNiS3IXioo/edit?tab=t.0"
+                      href="https://docs.google.com/document/d/1ouYM4MhTTWZZ91OfkOz8mHzUa5JsjULgrzNiS3IXioo/export?format=pdf"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-green-600 dark:text-green-400 hover:underline font-medium"
